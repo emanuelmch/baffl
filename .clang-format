@@ -1,0 +1,6 @@
+BasedOnStyle: LLVM
+ColumnLimit: 120
+FixNamespaceComments: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AlwaysBreakTemplateDeclarations: Yes
