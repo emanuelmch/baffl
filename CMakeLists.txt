@@ -28,18 +28,25 @@ project(BAFFL VERSION 0.1 LANGUAGES CXX)
 
 if (NOT CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     message(FATAL_ERROR "we need to be built by clang because of LLVM interop")
+    #TODO: Do we, though?
 endif ()
 
 # Compiler flags
 set(CMAKE_CXX_STANDARD 20)
-add_compile_options(-stdlib=libc++ -march=native -fno-rtti)
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -omit-frame-pointer -fno-exceptions")
+#add_compile_options(-stdlib=libc++ -march=native -fno-rtti -fno-exceptions)
+add_compile_options(-march=native -fno-rtti -fno-exceptions)
+#add_compile_options(-Wno-unused-command-line-argument -Xlinker --export-dynamic)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -omit-frame-pointer")
 # https://bugs.llvm.org//show_bug.cgi?id=32155 explains why -O0 over -Og
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Werror -Wall -Wextra -Wno-missing-braces -Wsign-conversion")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lLLVM-11")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lLLVM-11")
 
 # Executable
-add_executable(baffl src/cpp/main.cpp)
+add_executable(baffl
+        src/cpp/code_generator.cpp
+        src/cpp/main.cpp
+        )
 
 # Testing
 enable_testing()
