@@ -20,30 +20,20 @@
  * SOFTWARE.
  */
 
-#include "code_emitter.h"
-#include "code_lexer.h"
-#include "code_parser.h"
+#include "ast.h"
 
-#include <iostream>
+#include <llvm/IR/Verifier.h>
 
-int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -o output" << std::endl;
-    return 1;
-  }
+void TopLevelAST::codegen(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module>& module, llvm::IRBuilder<> *builder,
+                          llvm::legacy::FunctionPassManager *passManager) {
+  auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context), false);
+  auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", module.get());
 
-  {
-    std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong argument count" << std::endl;
-      return 2;
-    }
-  }
+  auto entryBlock = llvm::BasicBlock::Create(*context, "entry", function);
+  builder->SetInsertPoint(entryBlock);
 
-  std::string input(argv[1]);
-  std::string output(argv[3]);
-
-  auto tokens = CodeLexer::tokeniseFile(input);
-  auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
-  return CodeEmitter::emitObjectFile(topLevel, output);
+  auto retVal = llvm::ConstantInt::get(*context, llvm::APInt(32, 0));
+  builder->CreateRet(retVal);
+  llvm::verifyFunction(*function);
+  passManager->run(*function);
 }

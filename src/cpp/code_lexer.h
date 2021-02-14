@@ -20,30 +20,16 @@
  * SOFTWARE.
  */
 
-#include "code_emitter.h"
-#include "code_lexer.h"
-#include "code_parser.h"
+#pragma once
 
-#include <iostream>
+#include <string>
+#include <vector>
 
-int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -o output" << std::endl;
-    return 1;
-  }
+enum class Token {};
 
-  {
-    std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong argument count" << std::endl;
-      return 2;
-    }
-  }
+namespace CodeLexer {
 
-  std::string input(argv[1]);
-  std::string output(argv[3]);
-
-  auto tokens = CodeLexer::tokeniseFile(input);
-  auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
-  return CodeEmitter::emitObjectFile(topLevel, output);
+inline std::vector<Token> tokeniseFile(const std::string &) {
+  return std::vector<Token>();
+}
 }

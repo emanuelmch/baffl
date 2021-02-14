@@ -20,9 +20,4 @@
  * SOFTWARE.
  */
 
-#pragma once
-
-#include <string>
-
-void initializeLlvmGenerator();
-int generateObjectFile(const std::string &input, const std::string &output);
+#include "code_lexer.h"

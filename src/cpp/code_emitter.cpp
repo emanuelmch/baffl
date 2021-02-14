@@ -20,10 +20,9 @@
  * SOFTWARE.
  */
 
-#include "code_generator.h"
+#include "code_emitter.h"
 
 #include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
@@ -37,45 +36,21 @@
 
 #include <iostream>
 
-void initializeLlvmGenerator() {
-  llvm::InitializeAllTargetInfos();
-  llvm::InitializeAllTargets();
-  llvm::InitializeAllTargetMCs();
-  llvm::InitializeAllAsmParsers();
-  llvm::InitializeAllAsmPrinters();
-}
-
-inline std::unique_ptr<llvm::Module> generateModule(llvm::LLVMContext &context) {
-  llvm::IRBuilder<> builder(context);
-  auto module = std::make_unique<llvm::Module>("baffl", context);
+inline std::shared_ptr<llvm::Module> generateModule(llvm::LLVMContext *context,
+                                                    const std::vector<std::shared_ptr<TopLevelAST>> &ast) {
+  llvm::IRBuilder<> builder(*context);
+  auto module = std::make_shared<llvm::Module>("baffl_main", *context);
   llvm::legacy::FunctionPassManager passManager(module.get());
   passManager.doInitialization();
 
-  {
-    auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(context), false);
-    auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", module.get());
-
-    auto entryBlock = llvm::BasicBlock::Create(context, "entry", function);
-    builder.SetInsertPoint(entryBlock);
-
-    auto retVal = llvm::ConstantInt::get(context, llvm::APInt(32, 0));
-    builder.CreateRet(retVal);
-    llvm::verifyFunction(*function);
-    passManager.run(*function);
+  for (const auto &topLevel : ast) {
+    topLevel->codegen(context, module, &builder, &passManager);
   }
 
-//  module->print(llvm::errs(), nullptr);
   return module;
 }
 
-inline int writeModuleToFile(const std::string &output, std::unique_ptr<llvm::Module> &module) {
-  // Initialize the target registry etc.
-  llvm::InitializeAllTargetInfos();
-  llvm::InitializeAllTargets();
-  llvm::InitializeAllTargetMCs();
-  llvm::InitializeAllAsmParsers();
-  llvm::InitializeAllAsmPrinters();
-
+inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Module> &module) {
   auto targetTriple = llvm::sys::getDefaultTargetTriple();
   module->setTargetTriple(targetTriple);
 
@@ -115,8 +90,14 @@ inline int writeModuleToFile(const std::string &output, std::unique_ptr<llvm::Mo
   return 0;
 }
 
-int generateObjectFile(const std::string &, const std::string &output) {
+int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &topLevel, const std::string &output) {
+  llvm::InitializeAllTargetInfos();
+  llvm::InitializeAllTargets();
+  llvm::InitializeAllTargetMCs();
+  llvm::InitializeAllAsmParsers();
+  llvm::InitializeAllAsmPrinters();
+
   llvm::LLVMContext context;
-  std::unique_ptr<llvm::Module> module = generateModule(context);
+  auto module = generateModule(&context, topLevel);
   return writeModuleToFile(output, module);
 }

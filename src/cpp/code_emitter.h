@@ -20,30 +20,16 @@
  * SOFTWARE.
  */
 
-#include "code_emitter.h"
-#include "code_lexer.h"
-#include "code_parser.h"
+#pragma once
 
-#include <iostream>
+#include "ast.h"
 
-int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -o output" << std::endl;
-    return 1;
-  }
+#include <llvm/IR/LLVMContext.h>
 
-  {
-    std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong argument count" << std::endl;
-      return 2;
-    }
-  }
+#include <memory>
+#include <string>
 
-  std::string input(argv[1]);
-  std::string output(argv[3]);
+namespace CodeEmitter {
 
-  auto tokens = CodeLexer::tokeniseFile(input);
-  auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
-  return CodeEmitter::emitObjectFile(topLevel, output);
+int emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>>&, const std::string &output);
 }

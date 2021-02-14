@@ -44,7 +44,10 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lLLVM-11")
 
 # Executable
 add_executable(baffl
-        src/cpp/code_generator.cpp
+        src/cpp/ast.cpp
+        src/cpp/code_emitter.cpp
+        src/cpp/code_lexer.cpp
+        src/cpp/code_parser.cpp
         src/cpp/main.cpp
         )
 

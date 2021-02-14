@@ -20,30 +20,18 @@
  * SOFTWARE.
  */
 
-#include "code_emitter.h"
+#pragma once
+
 #include "code_lexer.h"
-#include "code_parser.h"
 
-#include <iostream>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/Module.h>
 
-int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -o output" << std::endl;
-    return 1;
-  }
+#include <memory>
 
-  {
-    std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong argument count" << std::endl;
-      return 2;
-    }
-  }
+struct TopLevelAST {
 
-  std::string input(argv[1]);
-  std::string output(argv[3]);
-
-  auto tokens = CodeLexer::tokeniseFile(input);
-  auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
-  return CodeEmitter::emitObjectFile(topLevel, output);
-}
+  void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module>&, llvm::IRBuilder<> *, llvm::legacy::FunctionPassManager *);
+};
