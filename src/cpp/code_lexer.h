@@ -29,7 +29,5 @@ enum class Token {};
 
 namespace CodeLexer {
 
-inline std::vector<Token> tokeniseFile(const std::string &) {
-  return std::vector<Token>();
-}
+std::vector<Token> tokenise(const std::string &);
 }

@@ -21,3 +21,10 @@
  */
 
 #include "code_lexer.h"
+
+#include <iostream>
+
+std::vector<Token> CodeLexer::tokenise(const std::string &content) {
+  std::cout << "File received:\n" << content << "\nEOF" << std::endl;
+  return std::vector<Token>();
+}

@@ -20,32 +20,27 @@
  * SOFTWARE.
  */
 
-#include "code_emitter.h"
-#include "code_lexer.h"
-#include "code_parser.h"
-#include "utils/file_reader.h"
+#include "file_reader.h"
 
+#include <fstream>
 #include <iostream>
 
-int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -o output" << std::endl;
-    return 1;
+std::string FileReader::readWholeFile(const std::string &path) {
+  std::ifstream input(path, std::ios::in);
+  if (!input) {
+    std::cerr << "Could not read input file: " << path << std::endl;
+    exit(1);
   }
 
-  {
-    std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong argument count" << std::endl;
-      return 1;
-    }
-  }
+  input.seekg(0, std::ios::end);
+  auto filesize = input.tellg();
+  input.seekg(0, std::ios::beg);
 
-  std::string input(argv[1]);
-  std::string output(argv[3]);
+  std::string contents;
+  contents.resize(static_cast<unsigned long>(filesize));
 
-  auto fileContents = FileReader::readWholeFile(input);
-  auto tokens = CodeLexer::tokenise(fileContents);
-  auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
-  return CodeEmitter::emitObjectFile(topLevel, output);
+  input.read(&contents[0], filesize);
+  input.close();
+
+  return contents;
 }

@@ -20,32 +20,11 @@
  * SOFTWARE.
  */
 
-#include "code_emitter.h"
-#include "code_lexer.h"
-#include "code_parser.h"
-#include "utils/file_reader.h"
+#pragma once
 
-#include <iostream>
+#include <string>
 
-int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -o output" << std::endl;
-    return 1;
-  }
+namespace FileReader {
 
-  {
-    std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong argument count" << std::endl;
-      return 1;
-    }
-  }
-
-  std::string input(argv[1]);
-  std::string output(argv[3]);
-
-  auto fileContents = FileReader::readWholeFile(input);
-  auto tokens = CodeLexer::tokenise(fileContents);
-  auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
-  return CodeEmitter::emitObjectFile(topLevel, output);
+std::string readWholeFile(const std::string &path);
 }

@@ -49,6 +49,7 @@ add_executable(baffl
         src/cpp/code_lexer.cpp
         src/cpp/code_parser.cpp
         src/cpp/main.cpp
+        src/cpp/utils/file_reader.cpp
         )
 
 # Testing
