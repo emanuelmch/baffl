@@ -24,13 +24,13 @@
 
 #include <llvm/IR/Verifier.h>
 
-void LiteralIntegerAST::codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+void LiteralIntegerAST::generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
                                 llvm::legacy::FunctionPassManager *) const {}
 
-void ReturnAST::codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+void ReturnAST::generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
                         llvm::legacy::FunctionPassManager *) const {}
 
-void FunctionAST::codegen(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &module,
+void FunctionAST::generate(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &module,
                           llvm::IRBuilder<> *builder, llvm::legacy::FunctionPassManager *passManager) const {
   auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context), false);
   auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", module.get());

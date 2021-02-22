@@ -35,7 +35,7 @@
 
 // Interfaces
 struct AST {
-  virtual void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+  virtual void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
                        llvm::legacy::FunctionPassManager *) const = 0;
 };
 
@@ -54,7 +54,7 @@ struct LiteralIntegerAST : public ExpressionAST {
   explicit LiteralIntegerAST(intmax_t value) : value(value) {}
   virtual ~LiteralIntegerAST() = default;
 
-  void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+  void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
                llvm::legacy::FunctionPassManager *) const override;
 };
 
@@ -64,7 +64,7 @@ struct ReturnAST : public ExpressionAST {
   explicit ReturnAST(std::shared_ptr<const ExpressionAST> value) : value(std::move(value)) {}
   virtual ~ReturnAST() = default;
 
-  void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+  void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
                llvm::legacy::FunctionPassManager *) const override;
 };
 
@@ -75,7 +75,7 @@ struct FunctionAST : TopLevelAST {
   FunctionAST(std::string name, std::shared_ptr<const ExpressionAST> body) : name(std::move(name)), body(std::move(body)) {}
   ~FunctionAST() override = default;
 
-  void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+  void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
                llvm::legacy::FunctionPassManager *) const override;
 
   // TODO: Fix this

@@ -45,7 +45,7 @@ inline std::shared_ptr<llvm::Module> generateModule(llvm::LLVMContext *context,
   passManager.doInitialization();
 
   for (const auto &topLevel : ast) {
-    topLevel->codegen(context, module, &builder, &passManager);
+    topLevel->generate(context, module, &builder, &passManager);
   }
 
   return module;
