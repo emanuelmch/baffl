@@ -34,6 +34,7 @@
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
 
+#include <cassert>
 #include <iostream>
 
 inline std::shared_ptr<llvm::Module> generateModule(llvm::LLVMContext *context,
@@ -90,7 +91,10 @@ inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Mo
   return 0;
 }
 
-int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &topLevel, const std::string &output) {
+int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &topLevel,
+                                const std::string &outputFile) {
+  assert(topLevel.size() == 1);
+
   llvm::InitializeAllTargetInfos();
   llvm::InitializeAllTargets();
   llvm::InitializeAllTargetMCs();
@@ -99,5 +103,5 @@ int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> 
 
   llvm::LLVMContext context;
   auto module = generateModule(&context, topLevel);
-  return writeModuleToFile(output, module);
+  return writeModuleToFile(outputFile, module);
 }

@@ -20,16 +20,33 @@
  * SOFTWARE.
  */
 
-#pragma once
+#include "cpp/code_parser.h"
 
-#include "ast.h"
+#include <gtest/gtest.h>
 
-#include <llvm/IR/LLVMContext.h>
+TEST(CodeLexer, Trivial) {
+  std::queue<Token> input;
+  input.push(Token(keyword_function));
+  input.push(Token(name, "main"));
+  input.push(Token(bracket_open));
+  input.push(Token(bracket_close));
+  input.push(Token(colon));
+  input.push(Token(name, "i32"));
+  input.push(Token(curly_open));
+  input.push(Token(keyword_return));
+  input.push(Token(literal_integer, "0"));
+  input.push(Token(semicolon));
+  input.push(Token(curly_close));
 
-#include <memory>
-#include <string>
+  auto returnValueAST = std::make_shared<LiteralIntegerAST>(0);
+  auto returnExpressionAST = std::make_shared<ReturnAST>(returnValueAST);
+  auto functionAST = std::make_shared<FunctionAST>("main", returnExpressionAST);
 
-namespace CodeEmitter {
+  std::vector<std::shared_ptr<TopLevelAST>> expected{functionAST};
+  auto actual = CodeParser::parseTopLevelExpressions(input);
 
-int emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &, const std::string &outputFile);
+  ASSERT_EQ(expected.size(), actual.size());
+  for (size_t i = 0 ; i < actual.size(); ++i) {
+    EXPECT_EQ(*(expected[i]), *(actual[i]));
+  }
 }

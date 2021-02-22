@@ -63,6 +63,7 @@ enable_testing()
 add_subdirectory(libs/googletest)
 set(unit_tests
         tests/cpp/code_lexer_test.cpp
+        tests/cpp/code_parser_test.cpp
         )
 
 foreach (unit_test_file ${unit_tests})

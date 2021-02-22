@@ -21,3 +21,9 @@
  */
 
 #include "code_parser.h"
+
+std::vector<std::shared_ptr<TopLevelAST>> CodeParser::parseTopLevelExpressions(const std::queue<Token> &) {
+  std::vector<std::shared_ptr<TopLevelAST>> result;
+  result.push_back(std::make_shared<FunctionAST>("main", std::shared_ptr<ExpressionAST>(nullptr)));
+  return result;
+}

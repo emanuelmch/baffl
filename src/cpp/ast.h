@@ -29,9 +29,55 @@
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
 
+#include <cstdint>
 #include <memory>
+#include <utility>
 
-struct TopLevelAST {
+// Interfaces
+struct AST {
+  virtual void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+                       llvm::legacy::FunctionPassManager *) const = 0;
+};
 
-  void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module>&, llvm::IRBuilder<> *, llvm::legacy::FunctionPassManager *);
+struct TopLevelAST : public AST {
+  virtual ~TopLevelAST() = default;
+
+  virtual bool operator==(const TopLevelAST &) const = 0;
+};
+
+struct ExpressionAST : public AST {};
+
+// Concrete
+struct LiteralIntegerAST : public ExpressionAST {
+  const intmax_t value;
+
+  explicit LiteralIntegerAST(intmax_t value) : value(value) {}
+  virtual ~LiteralIntegerAST() = default;
+
+  void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+               llvm::legacy::FunctionPassManager *) const override;
+};
+
+struct ReturnAST : public ExpressionAST {
+  const std::shared_ptr<const ExpressionAST> value;
+
+  explicit ReturnAST(std::shared_ptr<const ExpressionAST> value) : value(std::move(value)) {}
+  virtual ~ReturnAST() = default;
+
+  void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+               llvm::legacy::FunctionPassManager *) const override;
+};
+
+struct FunctionAST : TopLevelAST {
+  const std::string name;
+  const std::shared_ptr<const ExpressionAST> body;
+
+  FunctionAST(std::string name, std::shared_ptr<const ExpressionAST> body) : name(std::move(name)), body(std::move(body)) {}
+  ~FunctionAST() override = default;
+
+  void codegen(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+               llvm::legacy::FunctionPassManager *) const override;
+
+  // TODO: Fix this
+  bool operator==(const TopLevelAST &) const override { return true;}
 };
