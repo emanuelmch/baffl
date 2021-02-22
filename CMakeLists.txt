@@ -25,6 +25,7 @@ cmake_policy(SET CMP0048 NEW)
 cmake_policy(SET CMP0069 NEW)
 
 project(BAFFL VERSION 0.1 LANGUAGES CXX)
+include_directories(src)
 
 if (NOT CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     message(FATAL_ERROR "we need to be built by clang because of LLVM interop")
@@ -42,19 +43,38 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Werror -Wall -Wextra -W
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lLLVM-11")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lLLVM-11")
 
-# Executable
-add_executable(baffl
+# Source files
+add_library(baffl_lib
         src/cpp/ast.cpp
         src/cpp/code_emitter.cpp
         src/cpp/code_lexer.cpp
         src/cpp/code_parser.cpp
+        )
+
+add_executable(baffl
         src/cpp/main.cpp
         src/cpp/utils/file_reader.cpp
-        )
+        $<TARGET_OBJECTS:baffl_lib>)
 
 # Testing
 enable_testing()
 
+# Unit tests
+add_subdirectory(libs/googletest)
+set(unit_tests
+        tests/cpp/code_lexer_test.cpp
+        )
+
+foreach (unit_test_file ${unit_tests})
+    get_filename_component(unit_test_name ${unit_test_file} NAME_WE)
+    add_executable(${unit_test_name} ${unit_test_file} $<TARGET_OBJECTS:baffl_lib>)
+    target_link_libraries(${unit_test_name} gtest gtest_main pthread)
+
+    add_test(${unit_test_name} ${unit_test_name})
+endforeach (unit_test_file)
+
+
+# Integration tests
 set(integration_tests
         tests/integration/empty.baffl
         tests/integration/errorcode.baffl

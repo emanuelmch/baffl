@@ -20,39 +20,40 @@
  * SOFTWARE.
  */
 
-#include "code_emitter.h"
-#include "code_lexer.h"
-#include "code_parser.h"
-#include "utils/file_reader.h"
+#include "cpp/code_lexer.h"
 
-#include <iostream>
+#include <gtest/gtest.h>
 
-int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -o output" << std::endl;
-    return 1;
+// TODO: Move this to a header file
+namespace std {
+void PrintTo(const std::queue<Token> &tokens, std::ostream *os) {
+  auto copy = tokens;
+  *os << "[ ";
+  while (!copy.empty()) {
+    *os << copy.front() << ", ";
+    copy.pop();
   }
+  *os << "]";
+}
+}
 
-  {
-    std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong argument count" << std::endl;
-      return 1;
-    }
-  }
+TEST(CodeLexer, TrivialTopLevel) {
+  auto input = "fun main(): i32 {\n"
+               "    return 0;\n"
+               "}\n";
 
-  std::string input(argv[1]);
-  std::string output(argv[3]);
+  std::queue<Token> expected;
+  expected.push(Token(keyword_function));
+  expected.push(Token(name, "main"));
+  expected.push(Token(bracket_open));
+  expected.push(Token(bracket_close));
+  expected.push(Token(colon));
+  expected.push(Token(name, "i32"));
+  expected.push(Token(curly_open));
+  expected.push(Token(keyword_return));
+  expected.push(Token(literal_integer, "0"));
+  expected.push(Token(semicolon));
+  expected.push(Token(curly_close));
 
-  auto fileContents = FileReader::readWholeFile(input);
-
-  auto tokens = CodeLexer::tokenise(fileContents);
-  if (tokens.empty()) {
-    std::cerr << "Lexer couldn't create any tokens" << std::endl;
-    return 1;
-  }
-
-  auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
-
-  return CodeEmitter::emitObjectFile(topLevel, output);
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }

@@ -22,12 +22,43 @@
 
 #pragma once
 
+#include <cstdint>
+#include <ostream>
+#include <queue>
 #include <string>
-#include <vector>
+#include <utility>
 
-enum class Token {};
+enum TokenType : uint8_t {
+  noop = 0,         // no-op
+  bracket_open,     // (
+  bracket_close,    // )
+  curly_open,       // {
+  curly_close,      // }
+  colon,            // :
+  semicolon,        // ;
+  name,             // name
+  literal_integer,  // integer
+  keyword_function, // fun
+  keyword_return,   // return
+};
+
+struct Token {
+  explicit Token(TokenType id) : _id(id) {}
+  Token(TokenType id, std::string v) : _id(id), _value(std::move(v)) {}
+  ~Token() = default;
+
+  [[nodiscard]] inline auto id() const { return _id; }
+  [[nodiscard]] inline auto value() const { return _value; }
+  [[nodiscard]] inline bool operator==(const Token &o) const { return _id == o._id && _value == o._value; }
+
+private:
+  TokenType _id;
+  std::string _value;
+};
+
+std::ostream &operator<<(std::ostream &os, const Token &token);
 
 namespace CodeLexer {
 
-std::vector<Token> tokenise(const std::string &);
+std::queue<Token> tokenise(const std::string &);
 }
