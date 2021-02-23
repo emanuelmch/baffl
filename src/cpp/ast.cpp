@@ -24,22 +24,28 @@
 
 #include <llvm/IR/Verifier.h>
 
-void LiteralIntegerAST::generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-                                llvm::legacy::FunctionPassManager *) const {}
+llvm::Value *LiteralIntegerAST::generate(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &,
+                                         llvm::IRBuilder<> *, llvm::legacy::FunctionPassManager *) const {
+  return llvm::ConstantInt::get(*context, llvm::APInt(32, this->value));
+}
 
-void ReturnAST::generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-                        llvm::legacy::FunctionPassManager *) const {}
+llvm::Value *ReturnAST::generate(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &module,
+                                 llvm::IRBuilder<> *builder, llvm::legacy::FunctionPassManager *passManager) const {
+  auto returnValue = this->value->generate(context, module, builder, passManager);
+  return builder->CreateRet(returnValue);
+}
 
-void FunctionAST::generate(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &module,
-                          llvm::IRBuilder<> *builder, llvm::legacy::FunctionPassManager *passManager) const {
+llvm::Value *FunctionAST::generate(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &module,
+                                   llvm::IRBuilder<> *builder, llvm::legacy::FunctionPassManager *passManager) const {
   auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context), false);
   auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", module.get());
 
   auto entryBlock = llvm::BasicBlock::Create(*context, "entry", function);
   builder->SetInsertPoint(entryBlock);
 
-  auto retVal = llvm::ConstantInt::get(*context, llvm::APInt(32, 0));
-  builder->CreateRet(retVal);
+  this->body->generate(context, module, builder, passManager);
+
   llvm::verifyFunction(*function);
   passManager->run(*function);
+  return function;
 }

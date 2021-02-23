@@ -35,10 +35,10 @@
 
 // Interfaces
 struct AST {
-  virtual void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-                        llvm::legacy::FunctionPassManager *) const = 0;
+  virtual llvm::Value *generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+                                llvm::legacy::FunctionPassManager *) const = 0;
 
-  virtual bool operator==(const AST &) const = 0; // { return false; }
+  virtual bool operator==(const AST &) const = 0;
 };
 
 struct TopLevelAST : public AST {
@@ -49,13 +49,13 @@ struct ExpressionAST : public AST {};
 
 // Concrete
 struct LiteralIntegerAST : public ExpressionAST {
-  const intmax_t value;
+  const uint64_t value;
 
-  explicit LiteralIntegerAST(intmax_t value) : value(value) {}
+  explicit LiteralIntegerAST(uint64_t value) : value(value) {}
   virtual ~LiteralIntegerAST() = default;
 
-  void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-                llvm::legacy::FunctionPassManager *) const override;
+  llvm::Value *generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+                        llvm::legacy::FunctionPassManager *) const override;
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const LiteralIntegerAST *>(&o);
@@ -70,8 +70,8 @@ struct ReturnAST : public ExpressionAST {
   explicit ReturnAST(std::shared_ptr<const ExpressionAST> value) : value(std::move(value)) {}
   virtual ~ReturnAST() = default;
 
-  void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-                llvm::legacy::FunctionPassManager *) const override;
+  llvm::Value *generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+                        llvm::legacy::FunctionPassManager *) const override;
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const ReturnAST *>(&o);
@@ -89,8 +89,8 @@ struct FunctionAST : TopLevelAST {
       : name(std::move(name)), returnType(std::move(returnType)), body(std::move(body)) {}
   ~FunctionAST() override = default;
 
-  void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-                llvm::legacy::FunctionPassManager *) const override;
+  llvm::Value *generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
+                        llvm::legacy::FunctionPassManager *) const override;
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionAST *>(&o);

@@ -23,8 +23,8 @@
 #include "code_parser.h"
 
 std::shared_ptr<const ExpressionAST> readExpression(std::queue<Token> *tokens) {
-//  while (!tokens->empty()) tokens->pop();
-//  return std::shared_ptr<ExpressionAST>(nullptr);
+  //  while (!tokens->empty()) tokens->pop();
+  //  return std::shared_ptr<ExpressionAST>(nullptr);
   // FIXME: make this generic
   assert(tokens->front().id() == curly_open);
   tokens->pop();
