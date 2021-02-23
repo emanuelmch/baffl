@@ -34,8 +34,8 @@ endif ()
 
 # Compiler flags
 set(CMAKE_CXX_STANDARD 20)
-#add_compile_options(-stdlib=libc++ -march=native -fno-rtti -fno-exceptions)
-add_compile_options(-march=native -fno-rtti -fno-exceptions)
+#add_compile_options(-stdlib=libc++ -march=native -fno-exceptions)
+add_compile_options(-march=native -fno-exceptions)
 #add_compile_options(-Wno-unused-command-line-argument -Xlinker --export-dynamic)
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -omit-frame-pointer")
 # https://bugs.llvm.org//show_bug.cgi?id=32155 explains why -O0 over -Og

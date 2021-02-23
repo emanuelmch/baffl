@@ -36,13 +36,13 @@
 // Interfaces
 struct AST {
   virtual void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-                       llvm::legacy::FunctionPassManager *) const = 0;
+                        llvm::legacy::FunctionPassManager *) const = 0;
+
+  virtual bool operator==(const AST &) const = 0; // { return false; }
 };
 
 struct TopLevelAST : public AST {
   virtual ~TopLevelAST() = default;
-
-  virtual bool operator==(const TopLevelAST &) const = 0;
 };
 
 struct ExpressionAST : public AST {};
@@ -55,7 +55,13 @@ struct LiteralIntegerAST : public ExpressionAST {
   virtual ~LiteralIntegerAST() = default;
 
   void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-               llvm::legacy::FunctionPassManager *) const override;
+                llvm::legacy::FunctionPassManager *) const override;
+
+  bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const LiteralIntegerAST *>(&o);
+    bool result = other && this->value == other->value;
+    return result;
+  }
 };
 
 struct ReturnAST : public ExpressionAST {
@@ -65,19 +71,30 @@ struct ReturnAST : public ExpressionAST {
   virtual ~ReturnAST() = default;
 
   void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-               llvm::legacy::FunctionPassManager *) const override;
+                llvm::legacy::FunctionPassManager *) const override;
+
+  bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const ReturnAST *>(&o);
+    bool result = other && *(this->value) == *(other->value);
+    return result;
+  }
 };
 
 struct FunctionAST : TopLevelAST {
   const std::string name;
+  const std::string returnType;
   const std::shared_ptr<const ExpressionAST> body;
 
-  FunctionAST(std::string name, std::shared_ptr<const ExpressionAST> body) : name(std::move(name)), body(std::move(body)) {}
+  FunctionAST(std::string name, std::string returnType, std::shared_ptr<const ExpressionAST> body)
+      : name(std::move(name)), returnType(std::move(returnType)), body(std::move(body)) {}
   ~FunctionAST() override = default;
 
   void generate(llvm::LLVMContext *, const std::shared_ptr<llvm::Module> &, llvm::IRBuilder<> *,
-               llvm::legacy::FunctionPassManager *) const override;
+                llvm::legacy::FunctionPassManager *) const override;
 
-  // TODO: Fix this
-  bool operator==(const TopLevelAST &) const override { return true;}
+  bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const FunctionAST *>(&o);
+    bool result = other && this->name == other->name && *(this->body) == *(other->body);
+    return result;
+  }
 };

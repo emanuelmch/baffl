@@ -29,5 +29,5 @@
 
 namespace CodeParser {
 
-std::vector<std::shared_ptr<TopLevelAST>> parseTopLevelExpressions(const std::queue<Token> &);
+std::vector<std::shared_ptr<TopLevelAST>> parseTopLevelExpressions(std::queue<Token>);
 }

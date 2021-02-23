@@ -22,6 +22,7 @@
 
 #include "cpp/code_parser.h"
 
+#include "printers.h"
 #include <gtest/gtest.h>
 
 TEST(CodeLexer, Trivial) {
@@ -40,13 +41,13 @@ TEST(CodeLexer, Trivial) {
 
   auto returnValueAST = std::make_shared<LiteralIntegerAST>(0);
   auto returnExpressionAST = std::make_shared<ReturnAST>(returnValueAST);
-  auto functionAST = std::make_shared<FunctionAST>("main", returnExpressionAST);
+  auto functionAST = std::make_shared<FunctionAST>("main", "i32", returnExpressionAST);
 
   std::vector<std::shared_ptr<TopLevelAST>> expected{functionAST};
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
   ASSERT_EQ(expected.size(), actual.size());
   for (size_t i = 0 ; i < actual.size(); ++i) {
-    EXPECT_EQ(*(expected[i]), *(actual[i]));
+    EXPECT_EQ(*(expected[i]), *(actual[i])) << "With i = " << i;
   }
 }

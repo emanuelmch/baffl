@@ -49,6 +49,7 @@ struct Token {
 
   [[nodiscard]] inline auto id() const { return _id; }
   [[nodiscard]] inline auto value() const { return _value; }
+  [[nodiscard]] inline uintmax_t valueAsInt() const { return static_cast<uintmax_t>(std::stoll(_value)); }
   [[nodiscard]] inline bool operator==(const Token &o) const { return _id == o._id && _value == o._value; }
 
 private:

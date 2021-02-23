@@ -22,20 +22,8 @@
 
 #include "cpp/code_lexer.h"
 
+#include "printers.h"
 #include <gtest/gtest.h>
-
-// TODO: Move this to a header file
-namespace std {
-void PrintTo(const std::queue<Token> &tokens, std::ostream *os) {
-  auto copy = tokens;
-  *os << "[ ";
-  while (!copy.empty()) {
-    *os << copy.front() << ", ";
-    copy.pop();
-  }
-  *os << "]";
-}
-}
 
 TEST(CodeLexer, TrivialTopLevel) {
   auto input = "fun main(): i32 {\n"

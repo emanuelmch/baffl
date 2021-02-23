@@ -22,8 +22,63 @@
 
 #include "code_parser.h"
 
-std::vector<std::shared_ptr<TopLevelAST>> CodeParser::parseTopLevelExpressions(const std::queue<Token> &) {
+std::shared_ptr<const ExpressionAST> readExpression(std::queue<Token> *tokens) {
+//  while (!tokens->empty()) tokens->pop();
+//  return std::shared_ptr<ExpressionAST>(nullptr);
+  // FIXME: make this generic
+  assert(tokens->front().id() == curly_open);
+  tokens->pop();
+
+  assert(tokens->front().id() == keyword_return);
+  tokens->pop();
+
+  assert(tokens->front().id() == literal_integer);
+  auto returnValueToken = tokens->front();
+  auto returnValue = std::make_shared<LiteralIntegerAST>(returnValueToken.valueAsInt());
+  tokens->pop();
+
+  assert(tokens->front().id() == semicolon);
+  tokens->pop();
+
+  assert(tokens->front().id() == curly_close);
+  tokens->pop();
+
+  assert(tokens->empty());
+
+  return std::make_shared<ReturnAST>(returnValue);
+}
+
+inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
+  // FIXME: make this generic
+  assert(tokens->front().id() == keyword_function);
+  tokens->pop();
+
+  assert(tokens->front().id() == TokenType::name);
+  auto name = tokens->front().value();
+  tokens->pop();
+
+  assert(tokens->front().id() == bracket_open);
+  tokens->pop();
+
+  assert(tokens->front().id() == bracket_close);
+  tokens->pop();
+
+  assert(tokens->front().id() == colon);
+  tokens->pop();
+
+  assert(tokens->front().id() == TokenType::name);
+  auto returnType = tokens->front().value();
+  tokens->pop();
+
+  auto expression = readExpression(tokens);
+  return std::make_shared<FunctionAST>(name, returnType, expression);
+}
+
+std::vector<std::shared_ptr<TopLevelAST>> CodeParser::parseTopLevelExpressions(std::queue<Token> input) {
   std::vector<std::shared_ptr<TopLevelAST>> result;
-  result.push_back(std::make_shared<FunctionAST>("main", std::shared_ptr<ExpressionAST>(nullptr)));
+  while (!input.empty()) {
+    auto next = readTopLevel(&input);
+    result.push_back(next);
+  }
   return result;
 }
