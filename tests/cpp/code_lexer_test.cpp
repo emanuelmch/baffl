@@ -46,3 +46,24 @@ TEST(CodeLexer, TrivialTopLevel) {
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
+
+TEST(CodeLexer, TrivialTopLevel_Incorrect) {
+  auto input = "fun main(): i32 {\n"
+               "    return 0;\n"
+               "}\n";
+
+  std::queue<Token> expected;
+  expected.push(Token(keyword_function));
+  expected.push(Token(name, "main"));
+  expected.push(Token(bracket_open));
+  expected.push(Token(bracket_close));
+  expected.push(Token(colon));
+  expected.push(Token(name, "i32"));
+  expected.push(Token(curly_open));
+  expected.push(Token(keyword_return));
+  expected.push(Token(literal_integer, "1"));
+  expected.push(Token(semicolon));
+  expected.push(Token(curly_close));
+
+  EXPECT_NE(CodeLexer::tokenise(input), expected);
+}

@@ -49,3 +49,28 @@ TEST(CodeLexer, Trivial) {
 
   EXPECT_EQ(expected, actual);
 }
+
+TEST(CodeLexer, Trivial_Incorrect) {
+  auto returnValueAST = std::make_shared<LiteralIntegerAST>(0);
+  auto returnExpressionAST = std::make_shared<ReturnAST>(returnValueAST);
+  auto functionAST = std::make_shared<FunctionAST>("main", "i32", returnExpressionAST);
+
+  std::vector<std::shared_ptr<TopLevelAST>> expected{functionAST};
+
+  std::queue<Token> input;
+  input.push(Token(keyword_function));
+  input.push(Token(name, "main"));
+  input.push(Token(bracket_open));
+  input.push(Token(bracket_close));
+  input.push(Token(colon));
+  input.push(Token(name, "i32"));
+  input.push(Token(curly_open));
+  input.push(Token(keyword_return));
+  input.push(Token(literal_integer, "1"));
+  input.push(Token(semicolon));
+  input.push(Token(curly_close));
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  EXPECT_NE(expected, actual);
+}
