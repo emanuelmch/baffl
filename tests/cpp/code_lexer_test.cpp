@@ -22,7 +22,8 @@
 
 #include "cpp/code_lexer.h"
 
-#include "printers.h"
+#include "ast_helper.h"
+#include "lexer_helper.h"
 #include <gtest/gtest.h>
 
 TEST(CodeLexer, TrivialTopLevel) {

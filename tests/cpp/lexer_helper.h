@@ -22,13 +22,13 @@
 
 #pragma once
 
-#include "cpp/ast.h"
 #include "cpp/code_lexer.h"
 
 #include <ostream>
 #include <queue>
 
 namespace std {
+
 void PrintTo(const std::queue<Token> &tokens, std::ostream *os) {
   auto copy = tokens;
   *os << "[ ";
@@ -37,50 +37,5 @@ void PrintTo(const std::queue<Token> &tokens, std::ostream *os) {
     copy.pop();
   }
   *os << "]";
-}
-
-void PrintTo(const ExpressionAST &expressionAST, std::ostream *os);
-
-void PrintTo(const LiteralIntegerAST &literalAST, std::ostream *os) {
-  *os << "LiteralIntegerAST {" << literalAST.value << "}";
-}
-
-void PrintTo(const ReturnAST &returnAST, std::ostream *os) {
-  *os << "ReturnAST { ";
-  PrintTo(*returnAST.value, os);
-  *os << " }";
-}
-
-void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
-  auto literalIntegerAST = dynamic_cast<const LiteralIntegerAST *>(&expressionAST);
-  auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
-
-  if (literalIntegerAST) {
-    PrintTo(*literalIntegerAST, os);
-  } else if (returnAST) {
-    PrintTo(*returnAST, os);
-  } else {
-    *os << "Unknown Expression AST!!!";
-  }
-}
-
-void PrintTo(const FunctionAST &functionAST, std::ostream *os) {
-  *os << "FunctionAST { name: [" << functionAST.name << "], expression: { ";
-  if (functionAST.body == nullptr) {
-    *os << "nullptr";
-  } else {
-    PrintTo(*functionAST.body, os);
-  }
-  *os << " } }";
-}
-
-void PrintTo(const TopLevelAST &topLevelAST, std::ostream *os) {
-  auto functionAST = dynamic_cast<const FunctionAST *>(&topLevelAST);
-
-  if (functionAST) {
-    PrintTo(*functionAST, os);
-  } else {
-    *os << "Unknown Top Level AST!!!";
-  }
 }
 }

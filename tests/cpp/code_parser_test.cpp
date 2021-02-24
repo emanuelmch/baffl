@@ -22,7 +22,7 @@
 
 #include "cpp/code_parser.h"
 
-#include "printers.h"
+#include "ast_helper.h"
 #include <gtest/gtest.h>
 
 TEST(CodeLexer, Trivial) {
@@ -46,8 +46,5 @@ TEST(CodeLexer, Trivial) {
   std::vector<std::shared_ptr<TopLevelAST>> expected{functionAST};
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
-  ASSERT_EQ(expected.size(), actual.size());
-  for (size_t i = 0 ; i < actual.size(); ++i) {
-    EXPECT_EQ(*(expected[i]), *(actual[i])) << "With i = " << i;
-  }
+  EXPECT_EQ(expected, actual);
 }
