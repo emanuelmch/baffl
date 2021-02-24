@@ -85,5 +85,5 @@ foreach (testfile ${integration_tests})
     get_filename_component(testname ${testfile} NAME_WE)
     set(testname integration/${testname})
     add_test(NAME ${testname}
-            COMMAND ${CMAKE_SOURCE_DIR}/scripts/integration_test.sh $<TARGET_FILE:baffl> ${CMAKE_SOURCE_DIR}/${testfile})
+            COMMAND ${CMAKE_SOURCE_DIR}/src/scripts/integration_test.sh $<TARGET_FILE:baffl> ${CMAKE_SOURCE_DIR}/${testfile})
 endforeach (testfile)
