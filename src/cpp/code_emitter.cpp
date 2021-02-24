@@ -23,6 +23,7 @@
 #include "code_emitter.h"
 
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
@@ -37,15 +38,15 @@
 #include <cassert>
 #include <iostream>
 
-inline std::shared_ptr<llvm::Module> generateModule(llvm::LLVMContext *context,
+inline std::shared_ptr<llvm::Module> generateModule(const std::shared_ptr<llvm::LLVMContext>& context,
                                                     const std::vector<std::shared_ptr<TopLevelAST>> &ast) {
-  llvm::IRBuilder<> builder(*context);
+  auto builder = std::make_shared<llvm::IRBuilder<>>(*context);
   auto module = std::make_shared<llvm::Module>("baffl_main", *context);
-  llvm::legacy::FunctionPassManager passManager(module.get());
-  passManager.doInitialization();
+  auto passManager = std::make_shared<llvm::legacy::FunctionPassManager>(module.get());
+  passManager->doInitialization();
 
   for (const auto &topLevel : ast) {
-    topLevel->generate(context, module, &builder, &passManager);
+    topLevel->generate({context, module, builder, passManager});
   }
 
   return module;
@@ -101,7 +102,7 @@ int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> 
   llvm::InitializeAllAsmParsers();
   llvm::InitializeAllAsmPrinters();
 
-  llvm::LLVMContext context;
-  auto module = generateModule(&context, topLevel);
+  auto context = std::make_shared<llvm::LLVMContext>();
+  auto module = generateModule(context, topLevel);
   return writeModuleToFile(outputFile, module);
 }

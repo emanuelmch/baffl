@@ -24,28 +24,25 @@
 
 #include <llvm/IR/Verifier.h>
 
-llvm::Value *LiteralIntegerAST::generate(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &,
-                                         llvm::IRBuilder<> *, llvm::legacy::FunctionPassManager *) const {
-  return llvm::ConstantInt::get(*context, llvm::APInt(32, this->value));
+llvm::Value *LiteralIntegerAST::generate(const EmissionContext &context) const {
+  return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, this->value));
 }
 
-llvm::Value *ReturnAST::generate(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &module,
-                                 llvm::IRBuilder<> *builder, llvm::legacy::FunctionPassManager *passManager) const {
-  auto returnValue = this->value->generate(context, module, builder, passManager);
-  return builder->CreateRet(returnValue);
+llvm::Value *ReturnAST::generate(const EmissionContext &context) const {
+  auto returnValue = this->value->generate(context);
+  return context.builder->CreateRet(returnValue);
 }
 
-llvm::Value *FunctionAST::generate(llvm::LLVMContext *context, const std::shared_ptr<llvm::Module> &module,
-                                   llvm::IRBuilder<> *builder, llvm::legacy::FunctionPassManager *passManager) const {
-  auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context), false);
-  auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", module.get());
+llvm::Value *FunctionAST::generate(const EmissionContext &context) const {
+  auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context.llvmContext), false);
+  auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", context.module.get());
 
-  auto entryBlock = llvm::BasicBlock::Create(*context, "entry", function);
-  builder->SetInsertPoint(entryBlock);
+  auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
+  context.builder->SetInsertPoint(entryBlock);
 
-  this->body->generate(context, module, builder, passManager);
+  this->body->generate(context);
 
   llvm::verifyFunction(*function);
-  passManager->run(*function);
+  context.passManager->run(*function);
   return function;
 }

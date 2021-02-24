@@ -24,8 +24,6 @@
 
 #include "ast.h"
 
-#include <llvm/IR/LLVMContext.h>
-
 #include <memory>
 #include <string>
 
