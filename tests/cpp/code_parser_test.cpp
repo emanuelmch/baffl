@@ -26,6 +26,12 @@
 #include <gtest/gtest.h>
 
 TEST(CodeLexer, Trivial) {
+  auto returnValueAST = std::make_shared<LiteralIntegerAST>(0);
+  auto returnExpressionAST = std::make_shared<ReturnAST>(returnValueAST);
+  auto functionAST = std::make_shared<FunctionAST>("main", "i32", returnExpressionAST);
+
+  std::vector<std::shared_ptr<TopLevelAST>> expected{functionAST};
+
   std::queue<Token> input;
   input.push(Token(keyword_function));
   input.push(Token(name, "main"));
@@ -39,11 +45,6 @@ TEST(CodeLexer, Trivial) {
   input.push(Token(semicolon));
   input.push(Token(curly_close));
 
-  auto returnValueAST = std::make_shared<LiteralIntegerAST>(0);
-  auto returnExpressionAST = std::make_shared<ReturnAST>(returnValueAST);
-  auto functionAST = std::make_shared<FunctionAST>("main", "i32", returnExpressionAST);
-
-  std::vector<std::shared_ptr<TopLevelAST>> expected{functionAST};
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
   EXPECT_EQ(expected, actual);
