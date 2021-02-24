@@ -20,10 +20,7 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 3.9) # CMP0069
-cmake_policy(SET CMP0048 NEW)
-cmake_policy(SET CMP0069 NEW)
-
+cmake_minimum_required(VERSION 3.0)
 project(BAFFL VERSION 0.1 LANGUAGES CXX)
 include_directories(src)
 
@@ -34,14 +31,11 @@ endif ()
 
 # Compiler flags
 set(CMAKE_CXX_STANDARD 20)
-#add_compile_options(-stdlib=libc++ -march=native -fno-exceptions)
 add_compile_options(-march=native -fno-exceptions)
-#add_compile_options(-Wno-unused-command-line-argument -Xlinker --export-dynamic)
+#add_compile_options(-Wno-unused-command-line-argument -Xlinker --export-dynamic) I think we'll need this someday
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -omit-frame-pointer")
-# https://bugs.llvm.org//show_bug.cgi?id=32155 explains why -O0 over -Og
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -Werror -Wall -Wextra -Wno-missing-braces -Wsign-conversion")
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lLLVM-11")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lLLVM-11")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og -Werror -Wall -Wextra -Wno-missing-braces -Wsign-conversion")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/lib64 -lLLVM-11")
 
 # Source files
 add_library(baffl_lib
@@ -54,7 +48,8 @@ add_library(baffl_lib
 add_executable(baffl
         src/cpp/main.cpp
         src/cpp/utils/file_reader.cpp
-        $<TARGET_OBJECTS:baffl_lib>)
+        $<TARGET_OBJECTS:baffl_lib>
+        )
 
 # Testing
 enable_testing()
