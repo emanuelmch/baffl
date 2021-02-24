@@ -59,8 +59,7 @@ struct LiteralIntegerAST : public ExpressionAST {
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const LiteralIntegerAST *>(&o);
-    bool result = other && this->value == other->value;
-    return result;
+    return other && this->value == other->value;
   }
 };
 
@@ -75,8 +74,7 @@ struct ReturnAST : public ExpressionAST {
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const ReturnAST *>(&o);
-    bool result = other && *(this->value) == *(other->value);
-    return result;
+    return other && *(this->value) == *(other->value);
   }
 };
 
@@ -94,7 +92,6 @@ struct FunctionAST : TopLevelAST {
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionAST *>(&o);
-    bool result = other && this->name == other->name && *(this->body) == *(other->body);
-    return result;
+    return other && this->name == other->name && *(this->body) == *(other->body);
   }
 };
