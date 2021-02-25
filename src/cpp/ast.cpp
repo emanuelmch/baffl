@@ -24,6 +24,13 @@
 
 #include <llvm/IR/Verifier.h>
 
+EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
+    : llvmContext(std::move(context)), builder(std::make_shared<llvm::IRBuilder<>>(*llvmContext)),
+      module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)),
+      passManager(std::make_shared<llvm::legacy::FunctionPassManager>(module.get())) {
+  passManager->doInitialization();
+}
+
 llvm::Value *LiteralIntegerAST::generate(const EmissionContext &context) const {
   return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, this->value));
 }

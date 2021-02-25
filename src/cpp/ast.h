@@ -36,9 +36,11 @@
 // Interfaces
 struct EmissionContext {
   std::shared_ptr<llvm::LLVMContext> llvmContext;
-  std::shared_ptr<llvm::Module> module;
   std::shared_ptr<llvm::IRBuilder<>> builder;
+  std::shared_ptr<llvm::Module> module;
   std::shared_ptr<llvm::legacy::FunctionPassManager> passManager;
+
+  explicit EmissionContext(std::shared_ptr<llvm::LLVMContext>);
 };
 
 struct AST {

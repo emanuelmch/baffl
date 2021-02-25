@@ -38,18 +38,15 @@
 #include <cassert>
 #include <iostream>
 
-inline std::shared_ptr<llvm::Module> generateModule(const std::shared_ptr<llvm::LLVMContext>& context,
+inline std::shared_ptr<llvm::Module> generateModule(const std::shared_ptr<llvm::LLVMContext> &llvmContext,
                                                     const std::vector<std::shared_ptr<TopLevelAST>> &ast) {
-  auto builder = std::make_shared<llvm::IRBuilder<>>(*context);
-  auto module = std::make_shared<llvm::Module>("baffl_main", *context);
-  auto passManager = std::make_shared<llvm::legacy::FunctionPassManager>(module.get());
-  passManager->doInitialization();
+  EmissionContext emissionContext(llvmContext);
 
   for (const auto &topLevel : ast) {
-    topLevel->generate({context, module, builder, passManager});
+    topLevel->generate(emissionContext);
   }
 
-  return module;
+  return emissionContext.module;
 }
 
 inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Module> &module) {
