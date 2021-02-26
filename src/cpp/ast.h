@@ -38,13 +38,16 @@ struct EmissionContext {
   std::shared_ptr<llvm::LLVMContext> llvmContext;
   std::shared_ptr<llvm::IRBuilder<>> builder;
   std::shared_ptr<llvm::Module> module;
-  std::shared_ptr<llvm::legacy::FunctionPassManager> passManager;
 
   explicit EmissionContext(std::shared_ptr<llvm::LLVMContext>);
+  bool runPasses(llvm::Function *);
+
+private:
+  llvm::legacy::FunctionPassManager passManager;
 };
 
 struct AST {
-  virtual llvm::Value *generate(const EmissionContext &) const = 0;
+  virtual llvm::Value *generate(EmissionContext &) const = 0;
 
   virtual bool operator==(const AST &) const = 0;
 };
@@ -62,7 +65,7 @@ struct LiteralIntegerAST : public ExpressionAST {
   explicit LiteralIntegerAST(uint64_t value) : value(value) {}
   virtual ~LiteralIntegerAST() = default;
 
-  llvm::Value *generate(const EmissionContext &) const override;
+  llvm::Value *generate(EmissionContext &) const override;
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const LiteralIntegerAST *>(&o);
@@ -76,7 +79,7 @@ struct ReturnAST : public ExpressionAST {
   explicit ReturnAST(std::shared_ptr<const ExpressionAST> value) : value(std::move(value)) {}
   virtual ~ReturnAST() = default;
 
-  llvm::Value *generate(const EmissionContext &) const override;
+  llvm::Value *generate(EmissionContext &) const override;
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const ReturnAST *>(&o);
@@ -93,7 +96,7 @@ struct FunctionAST : TopLevelAST {
       : name(std::move(name)), returnType(std::move(returnType)), body(std::move(body)) {}
   ~FunctionAST() override = default;
 
-  llvm::Value *generate(const EmissionContext &) const override;
+  llvm::Value *generate(EmissionContext &) const override;
 
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionAST *>(&o);

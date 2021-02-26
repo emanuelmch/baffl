@@ -26,21 +26,26 @@
 
 EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
     : llvmContext(std::move(context)), builder(std::make_shared<llvm::IRBuilder<>>(*llvmContext)),
-      module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)),
-      passManager(std::make_shared<llvm::legacy::FunctionPassManager>(module.get())) {
-  passManager->doInitialization();
+      module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), passManager(module.get()) {
+  passManager.doInitialization();
 }
 
-llvm::Value *LiteralIntegerAST::generate(const EmissionContext &context) const {
+bool EmissionContext::runPasses(llvm::Function *function) {
+  auto verifyFailed = llvm::verifyFunction(*function);
+  auto runFailed = passManager.run(*function);
+  return verifyFailed || runFailed;
+}
+
+llvm::Value *LiteralIntegerAST::generate(EmissionContext &context) const {
   return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, this->value));
 }
 
-llvm::Value *ReturnAST::generate(const EmissionContext &context) const {
+llvm::Value *ReturnAST::generate(EmissionContext &context) const {
   auto returnValue = this->value->generate(context);
   return context.builder->CreateRet(returnValue);
 }
 
-llvm::Value *FunctionAST::generate(const EmissionContext &context) const {
+llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context.llvmContext), false);
   auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", context.module.get());
 
@@ -49,7 +54,6 @@ llvm::Value *FunctionAST::generate(const EmissionContext &context) const {
 
   this->body->generate(context);
 
-  llvm::verifyFunction(*function);
-  context.passManager->run(*function);
+  context.runPasses(function);
   return function;
 }
