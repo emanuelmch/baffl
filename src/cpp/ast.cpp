@@ -31,7 +31,7 @@ EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
 }
 
 bool EmissionContext::runPasses(llvm::Function *function) {
-  auto verifyFailed = llvm::verifyFunction(*function);
+  auto verifyFailed = llvm::verifyFunction(*function, &llvm::errs());
   auto runFailed = passManager.run(*function);
   return verifyFailed || runFailed;
 }
