@@ -29,14 +29,17 @@
 
 int main(int argc, char *argv[]) {
   if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -o output" << std::endl;
+    std::cerr << "Usage: baffl input.baffl -[v]o output" << std::endl;
     return 1;
   }
 
+  bool isVerbose = false;
   {
     std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong argument count" << std::endl;
+    if (outputParameterIndicator == "-vo") {
+      isVerbose = true;
+    } else if (outputParameterIndicator != "-o") {
+      std::cerr << "Wrong arguments" << std::endl;
       return 1;
     }
   }
@@ -54,5 +57,5 @@ int main(int argc, char *argv[]) {
 
   auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
 
-  return CodeEmitter::emitObjectFile(topLevel, output);
+  return CodeEmitter::emitObjectFile(topLevel, output, isVerbose);
 }

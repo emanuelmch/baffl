@@ -90,7 +90,7 @@ inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Mo
 }
 
 int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &topLevel,
-                                const std::string &outputFile) {
+                                const std::string &outputFile, bool isVerbose) {
   assert(topLevel.size() == 1);
 
   llvm::InitializeAllTargetInfos();
@@ -101,5 +101,10 @@ int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> 
 
   auto context = std::make_shared<llvm::LLVMContext>();
   auto module = generateModule(context, topLevel);
+
+  if (isVerbose) {
+    module->print(llvm::outs(), nullptr);
+  }
+
   return writeModuleToFile(outputFile, module);
 }

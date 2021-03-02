@@ -29,5 +29,5 @@
 
 namespace CodeEmitter {
 
-int emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &, const std::string &outputFile);
+int emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &, const std::string &outputFile, bool isVerbose);
 }
