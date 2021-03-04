@@ -20,7 +20,9 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.8) # CMP0069
+cmake_policy(SET CMP0069 NEW) # INTERPROCEDURAL_OPTIMIZATION
+
 project(BAFFL VERSION 0.1 LANGUAGES CXX)
 include_directories(src/cpp)
 
@@ -29,28 +31,37 @@ if (NOT CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     #TODO: Do we, though?
 endif ()
 
+# Oh boy...
+find_package(LLVM REQUIRED CONFIG)
+include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
+add_definitions(${LLVM_DEFINITIONS})
+llvm_map_components_to_libnames(llvm_libs asmparser mc x86asmparser x86codegen)
+
 # Compiler flags
 set(CMAKE_CXX_STANDARD 20)
 add_compile_options(-march=native -fno-exceptions)
 #add_compile_options(-Wno-unused-command-line-argument -Xlinker --export-dynamic) I think we'll need this someday
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -omit-frame-pointer")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror -Wall -Wextra -Wno-missing-braces -Wsign-conversion")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/lib64 -lLLVM-11")
 
 # Source files
 add_library(baffl_lib
+        STATIC
         src/cpp/ast.cpp
         src/cpp/code_emitter.cpp
         src/cpp/code_lexer.cpp
         src/cpp/code_parser.cpp
         src/cpp/ast/emission_context.cpp
         )
+target_link_libraries(baffl_lib ${llvm_libs})
+set_property(TARGET baffl_lib PROPERTY INTERPROCEDURAL_OPTIMIZATION true)
 
 add_executable(baffl
         src/cpp/main.cpp
         src/cpp/helpers/file_reader.cpp
-        $<TARGET_OBJECTS:baffl_lib>
         )
+target_link_libraries(baffl baffl_lib)
+set_property(TARGET baffl PROPERTY INTERPROCEDURAL_OPTIMIZATION true)
 
 # Testing
 enable_testing()
@@ -64,8 +75,8 @@ set(unit_tests
 
 foreach (unit_test_file ${unit_tests})
     get_filename_component(unit_test_name ${unit_test_file} NAME_WE)
-    add_executable(${unit_test_name} ${unit_test_file} $<TARGET_OBJECTS:baffl_lib>)
-    target_link_libraries(${unit_test_name} gtest gtest_main pthread)
+    add_executable(${unit_test_name} ${unit_test_file})
+    target_link_libraries(${unit_test_name} baffl_lib gtest gtest_main pthread)
 
     add_test(${unit_test_name} ${unit_test_name})
 endforeach (unit_test_file)
