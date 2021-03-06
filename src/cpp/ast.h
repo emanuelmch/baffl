@@ -67,7 +67,7 @@ struct LiteralIntegerAST : public ExpressionAST {
 
   llvm::Value *generate(EmissionContext &) const override;
 
-  bool operator==(const AST &o) const override {
+  inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const LiteralIntegerAST *>(&o);
     return other && this->value == other->value;
   }
@@ -76,12 +76,15 @@ struct LiteralIntegerAST : public ExpressionAST {
 struct ReturnAST : public ExpressionAST {
   const std::shared_ptr<const ExpressionAST> value;
 
-  explicit ReturnAST(std::shared_ptr<const ExpressionAST> value) : value(std::move(value)) {}
+  template <typename T>
+  explicit ReturnAST(const T &value) : value(std::make_shared<const T>(value)) {}
+  template <typename T>
+  explicit ReturnAST(std::shared_ptr<T> value) : value(std::move(value)) {}
   virtual ~ReturnAST() = default;
 
   llvm::Value *generate(EmissionContext &) const override;
 
-  bool operator==(const AST &o) const override {
+  inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const ReturnAST *>(&o);
     return other && *(this->value) == *(other->value);
   }
@@ -92,13 +95,18 @@ struct FunctionAST : TopLevelAST {
   const std::string returnType;
   const std::shared_ptr<const ExpressionAST> body;
 
-  FunctionAST(std::string name, std::string returnType, std::shared_ptr<const ExpressionAST> body)
+  template <typename T>
+  FunctionAST(std::string name, std::string returnType, const T &body)
+      : name(std::move(name)), returnType(std::move(returnType)), body(std::make_shared<const T>(body)) {}
+  template <typename T>
+  FunctionAST(std::string name, std::string returnType, std::shared_ptr<T> body)
       : name(std::move(name)), returnType(std::move(returnType)), body(std::move(body)) {}
+
   ~FunctionAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;
 
-  bool operator==(const AST &o) const override {
+  inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionAST *>(&o);
     return other && this->name == other->name && *(this->body) == *(other->body);
   }

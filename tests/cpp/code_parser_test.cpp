@@ -25,13 +25,9 @@
 #include "ast_helper.h"
 #include <gtest/gtest.h>
 
-TEST(CodeLexer, Trivial) {
-  auto returnValueAST = std::make_shared<LiteralIntegerAST>(0);
-  auto returnExpressionAST = std::make_shared<ReturnAST>(returnValueAST);
-  auto functionAST = std::make_shared<FunctionAST>("main", "i32", returnExpressionAST);
+#include <memory>
 
-  std::vector<std::shared_ptr<TopLevelAST>> expected{functionAST};
-
+TEST(CodeLexer, MainFunction_Trivial) {
   std::queue<Token> input;
   input.push(Token(keyword_function));
   input.push(Token(name, "main"));
@@ -45,18 +41,19 @@ TEST(CodeLexer, Trivial) {
   input.push(Token(semicolon));
   input.push(Token(curly_close));
 
+  auto expected = std::make_shared<FunctionAST>( //
+      "main",                                    //
+      "i32",                                     //
+      ReturnAST{LiteralIntegerAST{0}}            //
+  );
+
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
-  EXPECT_EQ(expected, actual);
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
 }
 
 TEST(CodeLexer, Trivial_Incorrect) {
-  auto returnValueAST = std::make_shared<LiteralIntegerAST>(0);
-  auto returnExpressionAST = std::make_shared<ReturnAST>(returnValueAST);
-  auto functionAST = std::make_shared<FunctionAST>("main", "i32", returnExpressionAST);
-
-  std::vector<std::shared_ptr<TopLevelAST>> expected{functionAST};
-
   std::queue<Token> input;
   input.push(Token(keyword_function));
   input.push(Token(name, "main"));
@@ -70,7 +67,14 @@ TEST(CodeLexer, Trivial_Incorrect) {
   input.push(Token(semicolon));
   input.push(Token(curly_close));
 
+  auto expected = std::make_shared<FunctionAST>( //
+      "main",                                    //
+      "i32",                                     //
+      ReturnAST{LiteralIntegerAST{0}}            //
+  );
+
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
-  EXPECT_NE(expected, actual);
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_NE(actual[0], expected);
 }
