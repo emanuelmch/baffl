@@ -71,12 +71,29 @@ void PrintTo(const TopLevelAST &topLevelAST, std::ostream *os) {
     *os << "Unknown Top Level AST!!!";
   }
 }
+
+void PrintTo(const AST &ast, std::ostream *os) {
+  auto topLevelAST = dynamic_cast<const TopLevelAST *>(&ast);
+  if (topLevelAST) {
+    PrintTo(*topLevelAST, os);
+    return;
+  }
+
+  auto expressionAST = dynamic_cast<const ExpressionAST *>(&ast);
+  if (expressionAST) {
+    PrintTo(*expressionAST, os);
+    return;
+  }
+
+  *os << "Unknown AST!!!";
+}
 }
 
+// TODO: I'm pretty sure these aren't needed anymore
 bool operator==(const std::shared_ptr<TopLevelAST> &l, const std::shared_ptr<TopLevelAST> &r) {
   return ((!l && !r) || (l && r && *l == *r));
 }
 
-bool operator==(const std::shared_ptr<TopLevelAST> &l, const std::shared_ptr<FunctionAST> &r) {
+bool operator==(const std::shared_ptr<TopLevelAST> &l, const std::shared_ptr<AST> &r) {
   return ((!l && !r) || (l && r && *l == *r));
 }

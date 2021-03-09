@@ -22,7 +22,8 @@
 
 #include "cpp/code_parser.h"
 
-#include "ast_helper.h"
+#include "helpers/ast.h"
+#include "helpers/ast_builder.h"
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -41,11 +42,8 @@ TEST(CodeLexer, MainFunction_Trivial) {
   input.push(Token(semicolon));
   input.push(Token(curly_close));
 
-  auto expected = std::make_shared<FunctionAST>( //
-      "main",                                    //
-      "i32",                                     //
-      ReturnAST{LiteralIntegerAST{0}}            //
-  );
+  auto expected = ASTBuilder::makeFunction("main", "i32") //
+                      .returnLiteral(0);
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
@@ -67,11 +65,8 @@ TEST(CodeLexer, Trivial_Incorrect) {
   input.push(Token(semicolon));
   input.push(Token(curly_close));
 
-  auto expected = std::make_shared<FunctionAST>( //
-      "main",                                    //
-      "i32",                                     //
-      ReturnAST{LiteralIntegerAST{0}}            //
-  );
+  auto expected = ASTBuilder::makeFunction("main", "i32") //
+                      .returnLiteral(0);
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
@@ -90,8 +85,6 @@ TEST(CodeLexer, Trivial_Incorrect) {
 //   input.push(Token(curly_open));
 //   input.push(Token(keyword_let));
 //   input.push(Token(name, "x"));
-//   input.push(Token(semicolon));
-//   input.push(Token(name, "x"));
 //   input.push(Token(operator_equal));
 //   input.push(Token(literal_integer, "32"));
 //   input.push(Token(semicolon));
@@ -100,13 +93,10 @@ TEST(CodeLexer, Trivial_Incorrect) {
 //   input.push(Token(semicolon));
 //   input.push(Token(curly_close));
 //
-//   auto expected = std::make_shared<FunctionAST>( //
-//       "main",                                    //
-//       "i32",                                     //
-//           VariableDeclarationAST{"x"},                         //
-//           AssignmentExpressionAST{"x", LiteralIntegerAST{32}}, //
-//           ReturnAST{VariableReadAST{"x"}}                      //
-//   );
+//   auto expected = ASTBuilder::makeFunction("main", "i32") //
+//                       .declareVariable("x", 32)           //
+//                       .returnVariable("x")                //
+//                       .build();
 //
 //   auto actual = CodeParser::parseTopLevelExpressions(input);
 //

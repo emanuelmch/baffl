@@ -81,10 +81,7 @@ struct LiteralIntegerAST : public ExpressionAST {
 struct ReturnAST : public ExpressionAST {
   const std::shared_ptr<const ExpressionAST> value;
 
-  template <typename T>
-  explicit ReturnAST(const T &value) : value(std::make_shared<const T>(value)) {}
-  template <typename T>
-  explicit ReturnAST(std::shared_ptr<T> value) : value(std::move(value)) {}
+  explicit ReturnAST(std::shared_ptr<const ExpressionAST> value) : value(std::move(value)) {}
   ~ReturnAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;
@@ -100,13 +97,8 @@ struct FunctionAST : TopLevelAST {
   const std::string returnType;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
 
-  FunctionAST(std::string name, std::string returnType, std::shared_ptr<const ExpressionAST> expression)
-      : name{std::move(name)}, returnType{std::move(returnType)}, body{std::move(expression)} {}
-  template <typename T>
-  inline FunctionAST(std::string name, std::string returnType, const T &expression)
-      : name{std::move(name)}, returnType{std::move(returnType)}, body{std::shared_ptr<const ExpressionAST>{
-                                                                      new T{expression}}} {}
-
+  FunctionAST(std::string name, std::string returnType, std::vector<std::shared_ptr<const ExpressionAST>> body)
+      : name(std::move(name)), returnType(std::move(returnType)), body(std::move(body)) {}
   ~FunctionAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;

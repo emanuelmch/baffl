@@ -80,8 +80,9 @@ inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
   auto returnType = tokens->front().value();
   tokens->pop();
 
-  auto expression = readExpression(tokens);
-  return std::make_shared<FunctionAST>(name, returnType, expression);
+  std::vector<std::shared_ptr<const ExpressionAST>> body;
+  body.push_back(readExpression(tokens));
+  return std::make_shared<FunctionAST>(name, returnType, body);
 }
 
 std::vector<std::shared_ptr<TopLevelAST>> CodeParser::parseTopLevelExpressions(std::queue<Token> input) {

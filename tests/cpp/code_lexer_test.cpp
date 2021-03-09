@@ -22,8 +22,8 @@
 
 #include "cpp/code_lexer.h"
 
-#include "ast_helper.h"
-#include "lexer_helper.h"
+#include "helpers/ast.h"
+#include "helpers/lexer.h"
 #include <gtest/gtest.h>
 
 TEST(CodeLexer, MainFunction_Trivial) {
