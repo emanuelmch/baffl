@@ -74,6 +74,7 @@ endforeach (unit_test_file)
 set(integration_tests
         tests/integration/empty.baffl
         tests/integration/errorcode.baffl
+        tests/integration/variable.baffl
         )
 
 foreach (testfile ${integration_tests})

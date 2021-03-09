@@ -33,6 +33,9 @@
 #include <memory>
 #include <utility>
 
+// FIXME: Remove this line, but CLion is driving me crazy
+typedef u_int64_t uint64_t;
+
 // Interfaces
 struct EmissionContext {
   std::shared_ptr<llvm::LLVMContext> llvmContext;
@@ -56,14 +59,16 @@ struct TopLevelAST : public AST {
   virtual ~TopLevelAST() = default;
 };
 
-struct ExpressionAST : public AST {};
+struct ExpressionAST : public AST {
+  virtual ~ExpressionAST() = default;
+};
 
 // Concrete
 struct LiteralIntegerAST : public ExpressionAST {
   const uint64_t value;
 
   explicit LiteralIntegerAST(uint64_t value) : value(value) {}
-  virtual ~LiteralIntegerAST() = default;
+  ~LiteralIntegerAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;
 
@@ -80,7 +85,7 @@ struct ReturnAST : public ExpressionAST {
   explicit ReturnAST(const T &value) : value(std::make_shared<const T>(value)) {}
   template <typename T>
   explicit ReturnAST(std::shared_ptr<T> value) : value(std::move(value)) {}
-  virtual ~ReturnAST() = default;
+  ~ReturnAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;
 
@@ -93,14 +98,14 @@ struct ReturnAST : public ExpressionAST {
 struct FunctionAST : TopLevelAST {
   const std::string name;
   const std::string returnType;
-  const std::shared_ptr<const ExpressionAST> body;
+  const std::vector<std::shared_ptr<const ExpressionAST>> body;
 
+  FunctionAST(std::string name, std::string returnType, std::shared_ptr<const ExpressionAST> expression)
+      : name{std::move(name)}, returnType{std::move(returnType)}, body{std::move(expression)} {}
   template <typename T>
-  FunctionAST(std::string name, std::string returnType, const T &body)
-      : name(std::move(name)), returnType(std::move(returnType)), body(std::make_shared<const T>(body)) {}
-  template <typename T>
-  FunctionAST(std::string name, std::string returnType, std::shared_ptr<T> body)
-      : name(std::move(name)), returnType(std::move(returnType)), body(std::move(body)) {}
+  inline FunctionAST(std::string name, std::string returnType, const T &expression)
+      : name{std::move(name)}, returnType{std::move(returnType)}, body{std::shared_ptr<const ExpressionAST>{
+                                                                      new T{expression}}} {}
 
   ~FunctionAST() override = default;
 
@@ -108,6 +113,22 @@ struct FunctionAST : TopLevelAST {
 
   inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionAST *>(&o);
-    return other && this->name == other->name && *(this->body) == *(other->body);
+    return other && this->name == other->name && this->returnType == other->returnType &&
+           compareBodies(this->body, other->body);
+  }
+
+  inline static bool compareBodies(const std::vector<std::shared_ptr<const ExpressionAST>> &left,
+                                   const std::vector<std::shared_ptr<const ExpressionAST>> &right) {
+    if (left.size() != right.size()) return false;
+
+    for (auto l = left.cbegin(), r = right.cbegin(); l != left.cend(); ++l, ++r) {
+      auto leftItem = l->get();
+      auto rightItem = r->get();
+      if (*leftItem != *rightItem) {
+        return false;
+      }
+    }
+
+    return true;
   }
 };

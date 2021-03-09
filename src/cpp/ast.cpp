@@ -52,7 +52,9 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
   context.builder->SetInsertPoint(entryBlock);
 
-  this->body->generate(context);
+  for (auto expression : body) {
+    expression->generate(context);
+  }
 
   context.runPasses(function);
   return function;

@@ -54,11 +54,10 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
 }
 
 void PrintTo(const FunctionAST &functionAST, std::ostream *os) {
-  *os << "FunctionAST { name: [" << functionAST.name << "], expression: { ";
-  if (functionAST.body == nullptr) {
-    *os << "nullptr";
-  } else {
-    PrintTo(*functionAST.body, os);
+  *os << "FunctionAST { name: [" << functionAST.name << "], expressions[" << functionAST.body.size() << "]: { ";
+  for (const auto &expression : functionAST.body) {
+    PrintTo(*expression, os);
+    *os << ", ";
   }
   *os << " } }";
 }
@@ -75,5 +74,9 @@ void PrintTo(const TopLevelAST &topLevelAST, std::ostream *os) {
 }
 
 bool operator==(const std::shared_ptr<TopLevelAST> &l, const std::shared_ptr<TopLevelAST> &r) {
+  return ((!l && !r) || (l && r && *l == *r));
+}
+
+bool operator==(const std::shared_ptr<TopLevelAST> &l, const std::shared_ptr<FunctionAST> &r) {
   return ((!l && !r) || (l && r && *l == *r));
 }

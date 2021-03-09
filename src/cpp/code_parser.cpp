@@ -29,22 +29,32 @@ std::shared_ptr<const ExpressionAST> readExpression(std::queue<Token> *tokens) {
   assert(tokens->front().id() == curly_open);
   tokens->pop();
 
-  assert(tokens->front().id() == keyword_return);
-  tokens->pop();
+  std::shared_ptr<ExpressionAST> returnValue;
 
-  assert(tokens->front().id() == literal_integer);
-  auto returnValueToken = tokens->front();
-  auto returnValue = std::make_shared<LiteralIntegerAST>(returnValueToken.valueAsInt());
-  tokens->pop();
+  while (tokens->front().id() != curly_close) {
+    // FIXME: Support multiple {} levels
+    assert(tokens->front().id() != curly_open);
+    assert(returnValue.get() == nullptr); // A return statement has to be our last one
 
-  assert(tokens->front().id() == semicolon);
-  tokens->pop();
+    assert(tokens->front().id() == keyword_return);
+    tokens->pop();
 
-  assert(tokens->front().id() == curly_close);
+    assert(tokens->front().id() == literal_integer);
+    auto returnValueToken = tokens->front();
+    returnValue = std::make_shared<LiteralIntegerAST>(returnValueToken.valueAsInt());
+    tokens->pop();
+
+    assert(tokens->front().id() == semicolon);
+    tokens->pop();
+
+    assert(tokens->front().id() == curly_close);
+  }
   tokens->pop();
 
   assert(tokens->empty());
 
+  // FIXME: Support void functions
+  assert(returnValue.get() != nullptr);
   return std::make_shared<ReturnAST>(returnValue);
 }
 

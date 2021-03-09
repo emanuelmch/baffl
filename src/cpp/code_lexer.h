@@ -36,9 +36,11 @@ enum TokenType : uint8_t {
   curly_close,      // }
   colon,            // :
   semicolon,        // ;
+  operator_equal,   // =
   name,             // name
   literal_integer,  // integer
   keyword_function, // fun
+  keyword_let,      // let
   keyword_return,   // return
 };
 

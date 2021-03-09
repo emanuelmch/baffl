@@ -25,7 +25,6 @@
 #include <cassert>
 #include <iostream>
 
-std::string_view readTokenUntil(std::basic_string_view<char> view, auto item);
 std::ostream &operator<<(std::ostream &os, const Token &token) {
   switch (token.id()) {
   case noop:
@@ -49,6 +48,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case semicolon:
     os << "`;`";
     break;
+  case operator_equal:
+    os << "`=`";
+    break;
   case name:
     os << "name: [" << token.value() << "]";
     break;
@@ -57,6 +59,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
     break;
   case keyword_function:
     os << "keyword: function";
+    break;
+  case keyword_let:
+    os << "keyword: let";
     break;
   case keyword_return:
     os << "keyword: return";
@@ -70,6 +75,8 @@ inline Token fromString(const std::string_view &token) {
 
   if (token == "fun") {
     return Token(keyword_function);
+  } else if (token == "let") {
+    return Token(keyword_let);
   } else if (token == "return") {
     return Token(keyword_return);
   }
@@ -128,8 +135,13 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
   case ';':
     ++(*pos);
     return Token(semicolon);
+  case '=':
+    ++(*pos);
+    return Token(operator_equal);
   default:
-    std::cerr << "Couldn't read next token: " << content.substr(*pos) << std::endl;
+    auto line = content.substr(*pos);
+    auto linebreak = line.find_first_of("\r\n");
+    std::cerr << "Couldn't read next token: " << line.substr(0, linebreak) << std::endl;
     return Token(noop);
   }
 }

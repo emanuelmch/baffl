@@ -26,7 +26,7 @@
 #include "lexer_helper.h"
 #include <gtest/gtest.h>
 
-TEST(CodeLexer, TrivialTopLevel) {
+TEST(CodeLexer, MainFunction_Trivial) {
   auto input = "fun main(): i32 {\n"
                "    return 0;\n"
                "}\n";
@@ -47,7 +47,7 @@ TEST(CodeLexer, TrivialTopLevel) {
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
 
-TEST(CodeLexer, TrivialTopLevel_Incorrect) {
+TEST(CodeLexer, MainFunction_Trivial_Incorrect) {
   auto input = "fun main(): i32 {\n"
                "    return 0;\n"
                "}\n";
@@ -66,4 +66,31 @@ TEST(CodeLexer, TrivialTopLevel_Incorrect) {
   expected.push(Token(curly_close));
 
   EXPECT_NE(CodeLexer::tokenise(input), expected);
+}
+
+TEST(CodeLexer, MainFunction_WithVariable) {
+  auto input = "fun main(): i32 {\n"
+               "    let x = 32;\n"
+               "    return 0;\n"
+               "}\n";
+
+  std::queue<Token> expected;
+  expected.push(Token(keyword_function));
+  expected.push(Token(name, "main"));
+  expected.push(Token(bracket_open));
+  expected.push(Token(bracket_close));
+  expected.push(Token(colon));
+  expected.push(Token(name, "i32"));
+  expected.push(Token(curly_open));
+  expected.push(Token(keyword_let));
+  expected.push(Token(name, "x"));
+  expected.push(Token(operator_equal));
+  expected.push(Token(literal_integer, "32"));
+  expected.push(Token(semicolon));
+  expected.push(Token(keyword_return));
+  expected.push(Token(literal_integer, "0"));
+  expected.push(Token(semicolon));
+  expected.push(Token(curly_close));
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
