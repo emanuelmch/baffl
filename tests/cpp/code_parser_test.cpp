@@ -74,32 +74,32 @@ TEST(CodeLexer, Trivial_Incorrect) {
   EXPECT_NE(actual[0], expected);
 }
 
-// TEST(CodeLexer, MainFunction_WithVariable) {
-//   std::queue<Token> input;
-//   input.push(Token(keyword_function));
-//   input.push(Token(name, "main"));
-//   input.push(Token(bracket_open));
-//   input.push(Token(bracket_close));
-//   input.push(Token(colon));
-//   input.push(Token(name, "i32"));
-//   input.push(Token(curly_open));
-//   input.push(Token(keyword_let));
-//   input.push(Token(name, "x"));
-//   input.push(Token(operator_equal));
-//   input.push(Token(literal_integer, "32"));
-//   input.push(Token(semicolon));
-//   input.push(Token(keyword_return));
-//   input.push(Token(literal_integer, "0"));
-//   input.push(Token(semicolon));
-//   input.push(Token(curly_close));
-//
-//   auto expected = ASTBuilder::makeFunction("main", "i32") //
-//                       .declareVariable("x", 32)           //
-//                       .returnVariable("x")                //
-//                       .build();
-//
-//   auto actual = CodeParser::parseTopLevelExpressions(input);
-//
-//   ASSERT_EQ(actual.size(), 1);
-//   EXPECT_NE(actual[0], expected);
-// }
+TEST(CodeLexer, MainFunction_WithVariable) {
+  std::queue<Token> input;
+  input.push(Token(keyword_function));
+  input.push(Token(name, "main"));
+  input.push(Token(bracket_open));
+  input.push(Token(bracket_close));
+  input.push(Token(colon));
+  input.push(Token(name, "i32"));
+  input.push(Token(curly_open));
+  input.push(Token(keyword_let));
+  input.push(Token(name, "x"));
+  input.push(Token(operator_equal));
+  input.push(Token(literal_integer, "32"));
+  input.push(Token(semicolon));
+  input.push(Token(keyword_return));
+  input.push(Token(literal_integer, "0"));
+  input.push(Token(semicolon));
+  input.push(Token(curly_close));
+
+  auto expected = ASTBuilder::makeFunction("main", "i32") //
+                      .declareVariable("x")               //
+                      .assignToVariable("x", 32)          //
+                      .returnVariable("x");
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_NE(actual[0], expected);
+}

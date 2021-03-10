@@ -34,9 +34,31 @@ struct ASTBuilder {
     return builder;
   }
 
+  inline ASTBuilder assignToVariable(std::string varName, uint64_t value) {
+    auto varReferenceAst = std::make_shared<VariableReferenceAST>(varName);
+    auto literalAst = std::make_shared<LiteralIntegerAST>(value);
+    auto assignmentAst = std::make_shared<AssignmentAST>(varReferenceAst, literalAst);
+
+  }
+
+  inline ASTBuilder declareVariable(std::string varName) {
+    auto declarationAst = std::make_shared<VariableDeclarationAST>(varName);
+    body.push_back(declarationAst);
+
+    return *this;
+  }
+
   inline ASTBuilder returnLiteral(uint64_t value) {
     auto literalAst = std::make_shared<LiteralIntegerAST>(value);
     auto returnAst = std::make_shared<ReturnAST>(literalAst);
+    body.push_back(returnAst);
+
+    return *this;
+  }
+
+  inline ASTBuilder returnVariable(std::string varName) {
+    auto varReferenceAst = std::make_shared<VariableReferenceAST>(varName);
+    auto returnAst = std::make_shared<ReturnAST>(varReferenceAst);
     body.push_back(returnAst);
 
     return *this;
