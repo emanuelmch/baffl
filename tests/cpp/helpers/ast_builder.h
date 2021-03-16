@@ -27,22 +27,17 @@
 #include "cpp/ast.h"
 
 struct ASTBuilder {
-  static inline ASTBuilder makeFunction(std::string name, std::string returnType) {
+  static inline ASTBuilder function(std::string name, std::string returnType) {
     ASTBuilder builder;
     builder.name = std::move(name);
     builder.returnType = std::move(returnType);
     return builder;
   }
 
-  inline ASTBuilder assignToVariable(std::string varName, uint64_t value) {
-    auto varReferenceAst = std::make_shared<VariableReferenceAST>(varName);
+  inline ASTBuilder declareVariable(std::string varName, uint64_t value) {
     auto literalAst = std::make_shared<LiteralIntegerAST>(value);
-    auto assignmentAst = std::make_shared<AssignmentAST>(varReferenceAst, literalAst);
-
-  }
-
-  inline ASTBuilder declareVariable(std::string varName) {
-    auto declarationAst = std::make_shared<VariableDeclarationAST>(varName);
+    VariableDeclarationAST test(varName, literalAst);
+    auto declarationAst = std::make_shared<VariableDeclarationAST>(varName, literalAst);
     body.push_back(declarationAst);
 
     return *this;
@@ -57,7 +52,7 @@ struct ASTBuilder {
   }
 
   inline ASTBuilder returnVariable(std::string varName) {
-    auto varReferenceAst = std::make_shared<VariableReferenceAST>(varName);
+    auto varReferenceAst = std::make_shared<VariableReferenceAST>(std::move(varName));
     auto returnAst = std::make_shared<ReturnAST>(varReferenceAst);
     body.push_back(returnAst);
 

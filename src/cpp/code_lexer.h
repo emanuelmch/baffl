@@ -36,7 +36,7 @@ enum TokenType : uint8_t {
   curly_close,      // }
   colon,            // :
   semicolon,        // ;
-  operator_equal,   // =
+  operator_assign,  // =
   name,             // name
   literal_integer,  // integer
   keyword_function, // fun
@@ -50,8 +50,8 @@ struct Token {
   ~Token() = default;
 
   [[nodiscard]] inline auto id() const { return _id; }
-  [[nodiscard]] inline auto value() const { return _value; }
   [[nodiscard]] inline uintmax_t valueAsInt() const { return static_cast<uintmax_t>(std::stoll(_value)); }
+  [[nodiscard]] inline std::string valueAsString() const { return _value; }
   [[nodiscard]] inline bool operator==(const Token &o) const { return _id == o._id && _value == o._value; }
 
 private:

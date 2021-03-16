@@ -40,14 +40,30 @@ void PrintTo(const ReturnAST &returnAST, std::ostream *os) {
   *os << " }";
 }
 
+void PrintTo(const VariableDeclarationAST &varDecAST, std::ostream *os) {
+  *os << "VarDecAST { " << varDecAST.varName << ", ";
+  PrintTo(*varDecAST.value, os);
+  *os << " }";
+}
+
+void PrintTo(const VariableReferenceAST &varRefAST, std::ostream *os) {
+  *os << "VarRefAST {" << varRefAST.varName << "}";
+}
+
 void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto literalIntegerAST = dynamic_cast<const LiteralIntegerAST *>(&expressionAST);
   auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
+  auto varDecAST = dynamic_cast<const VariableDeclarationAST *>(&expressionAST);
+  auto varRefAST = dynamic_cast<const VariableReferenceAST*>(&expressionAST);
 
   if (literalIntegerAST) {
     PrintTo(*literalIntegerAST, os);
   } else if (returnAST) {
     PrintTo(*returnAST, os);
+  } else if (varDecAST) {
+    PrintTo(*varDecAST, os);
+  } else if (varRefAST) {
+    PrintTo(*varRefAST, os);
   } else {
     *os << "Unknown Expression AST!!!";
   }

@@ -48,14 +48,14 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case semicolon:
     os << "`;`";
     break;
-  case operator_equal:
+  case operator_assign:
     os << "`=`";
     break;
   case name:
-    os << "name: [" << token.value() << "]";
+    os << "name: [" << token.valueAsString() << "]";
     break;
   case literal_integer:
-    os << "literal: int: [" << token.value() << "]";
+    os << "literal: int: [" << token.valueAsString() << "]";
     break;
   case keyword_function:
     os << "keyword: function";
@@ -137,7 +137,7 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
     return Token(semicolon);
   case '=':
     ++(*pos);
-    return Token(operator_equal);
+    return Token(operator_assign);
   default:
     auto line = content.substr(*pos);
     auto linebreak = line.find_first_of("\r\n");

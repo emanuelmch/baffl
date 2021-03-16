@@ -11,7 +11,7 @@ TEST_EXECUTABLE=${TEMP_DIR}/executable
 TEST_EXPECTED_RESULT=$(cat "${TEST_FILE}.result")
 
 # Compile the test file
-$COMPILER "${TEST_FILE}" -o "${TEST_OBJECT}" || exit 1
+$COMPILER "${TEST_FILE}" -vo "${TEST_OBJECT}" || exit 1
 
 # TODO: Stop relying on clang for linking
 clang "${TEST_OBJECT}" -o "${TEST_EXECUTABLE}"

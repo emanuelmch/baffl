@@ -29,6 +29,7 @@
 #include <memory>
 
 TEST(CodeLexer, MainFunction_Trivial) {
+  // fun main(): i32 { return 0; }
   std::queue<Token> input;
   input.push(Token(keyword_function));
   input.push(Token(name, "main"));
@@ -42,7 +43,7 @@ TEST(CodeLexer, MainFunction_Trivial) {
   input.push(Token(semicolon));
   input.push(Token(curly_close));
 
-  auto expected = ASTBuilder::makeFunction("main", "i32") //
+  auto expected = ASTBuilder::function("main", "i32") //
                       .returnLiteral(0);
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
@@ -52,6 +53,7 @@ TEST(CodeLexer, MainFunction_Trivial) {
 }
 
 TEST(CodeLexer, Trivial_Incorrect) {
+  // fun main(): i32 { return 10; }
   std::queue<Token> input;
   input.push(Token(keyword_function));
   input.push(Token(name, "main"));
@@ -65,7 +67,7 @@ TEST(CodeLexer, Trivial_Incorrect) {
   input.push(Token(semicolon));
   input.push(Token(curly_close));
 
-  auto expected = ASTBuilder::makeFunction("main", "i32") //
+  auto expected = ASTBuilder::function("main", "i32") //
                       .returnLiteral(0);
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
@@ -75,6 +77,7 @@ TEST(CodeLexer, Trivial_Incorrect) {
 }
 
 TEST(CodeLexer, MainFunction_WithVariable) {
+  // fun main(): i32 { let x = 32; return x; }
   std::queue<Token> input;
   input.push(Token(keyword_function));
   input.push(Token(name, "main"));
@@ -85,21 +88,21 @@ TEST(CodeLexer, MainFunction_WithVariable) {
   input.push(Token(curly_open));
   input.push(Token(keyword_let));
   input.push(Token(name, "x"));
-  input.push(Token(operator_equal));
+  input.push(Token(operator_assign));
   input.push(Token(literal_integer, "32"));
   input.push(Token(semicolon));
   input.push(Token(keyword_return));
-  input.push(Token(literal_integer, "0"));
+  input.push(Token(name, "x"));
   input.push(Token(semicolon));
   input.push(Token(curly_close));
 
-  auto expected = ASTBuilder::makeFunction("main", "i32") //
-                      .declareVariable("x")               //
-                      .assignToVariable("x", 32)          //
-                      .returnVariable("x");
+  auto expected = ASTBuilder::function("main", "i32") //
+                      .declareVariable("x", 32)       //
+                      .returnVariable("x")
+                      .build();
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
   ASSERT_EQ(actual.size(), 1);
-  EXPECT_NE(actual[0], expected);
+  EXPECT_EQ(actual[0], expected);
 }

@@ -22,40 +22,67 @@
 
 #include "code_parser.h"
 
-std::shared_ptr<const ExpressionAST> readExpression(std::queue<Token> *tokens) {
-  //  while (!tokens->empty()) tokens->pop();
-  //  return std::shared_ptr<ExpressionAST>(nullptr);
+inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *tokens) {
+  std::shared_ptr<ExpressionAST> statement;
+
+  switch (tokens->front().id()) {
+  case keyword_return: {
+    tokens->pop();
+    std::shared_ptr<ExpressionAST> returnValue;
+    if (tokens->front().id() == literal_integer) {
+      returnValue = std::make_shared<LiteralIntegerAST>(tokens->front().valueAsInt());
+    } else {
+      assert(tokens->front().id() == name);
+      returnValue = std::make_shared<VariableReferenceAST>(tokens->front().valueAsString());
+    }
+    tokens->pop();
+
+    statement = std::make_shared<ReturnAST>(returnValue);
+    break;
+  }
+  case keyword_let: {
+    tokens->pop();
+    assert(tokens->front().id() == name);
+    auto varName = tokens->front().valueAsString();
+    tokens->pop();
+    assert(tokens->front().id() == operator_assign);
+    tokens->pop();
+    assert(tokens->front().id() == literal_integer);
+    auto initialValue = std::make_shared<LiteralIntegerAST>(tokens->front().valueAsInt());
+    tokens->pop();
+
+    statement = std::make_shared<VariableDeclarationAST>(varName, initialValue);
+    break;
+  }
+  default:
+    assert(!"Statement starting with invalid token!");
+  }
+
+  assert(tokens->front().id() == semicolon);
+  tokens->pop();
+
+  return statement;
+}
+
+inline static std::vector<std::shared_ptr<const ExpressionAST>> readBody(std::queue<Token> *tokens) {
   // FIXME: make this generic
   assert(tokens->front().id() == curly_open);
   tokens->pop();
 
-  std::shared_ptr<ExpressionAST> returnValue;
+  std::vector<std::shared_ptr<const ExpressionAST>> body;
 
   while (tokens->front().id() != curly_close) {
     // FIXME: Support multiple {} levels
     assert(tokens->front().id() != curly_open);
-    assert(returnValue.get() == nullptr); // A return statement has to be our last one
 
-    assert(tokens->front().id() == keyword_return);
-    tokens->pop();
-
-    assert(tokens->front().id() == literal_integer);
-    auto returnValueToken = tokens->front();
-    returnValue = std::make_shared<LiteralIntegerAST>(returnValueToken.valueAsInt());
-    tokens->pop();
-
-    assert(tokens->front().id() == semicolon);
-    tokens->pop();
-
-    assert(tokens->front().id() == curly_close);
+    // FIXME: Don't assume our return value will always come from the last statement
+    body.push_back(readStatement(tokens));
   }
   tokens->pop();
 
   assert(tokens->empty());
 
-  // FIXME: Support void functions
-  assert(returnValue.get() != nullptr);
-  return std::make_shared<ReturnAST>(returnValue);
+  return body;
 }
 
 inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
@@ -64,7 +91,7 @@ inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
   tokens->pop();
 
   assert(tokens->front().id() == TokenType::name);
-  auto name = tokens->front().value();
+  auto name = tokens->front().valueAsString();
   tokens->pop();
 
   assert(tokens->front().id() == bracket_open);
@@ -77,11 +104,10 @@ inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
   tokens->pop();
 
   assert(tokens->front().id() == TokenType::name);
-  auto returnType = tokens->front().value();
+  auto returnType = tokens->front().valueAsString();
   tokens->pop();
 
-  std::vector<std::shared_ptr<const ExpressionAST>> body;
-  body.push_back(readExpression(tokens));
+  auto body = readBody(tokens);
   return std::make_shared<FunctionAST>(name, returnType, body);
 }
 

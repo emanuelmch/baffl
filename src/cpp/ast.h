@@ -22,33 +22,12 @@
 
 #pragma once
 
+#include "ast/emission_context.h"
 #include "code_lexer.h"
 
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/LegacyPassManager.h>
-#include <llvm/IR/Module.h>
-
-#include <cstdint>
-#include <memory>
-#include <utility>
-
-// FIXME: Remove this line, but CLion is driving me crazy
-typedef u_int64_t uint64_t;
+#include <llvm/IR/Value.h>
 
 // Interfaces
-struct EmissionContext {
-  std::shared_ptr<llvm::LLVMContext> llvmContext;
-  std::shared_ptr<llvm::IRBuilder<>> builder;
-  std::shared_ptr<llvm::Module> module;
-
-  explicit EmissionContext(std::shared_ptr<llvm::LLVMContext>);
-  bool runPasses(llvm::Function *);
-
-private:
-  llvm::legacy::FunctionPassManager passManager;
-};
-
 struct AST {
   virtual llvm::Value *generate(EmissionContext &) const = 0;
 
@@ -63,7 +42,7 @@ struct ExpressionAST : public AST {
   virtual ~ExpressionAST() = default;
 };
 
-// Concrete
+// Literals
 struct LiteralIntegerAST : public ExpressionAST {
   const uint64_t value;
 
@@ -78,6 +57,36 @@ struct LiteralIntegerAST : public ExpressionAST {
   }
 };
 
+// Variables
+struct VariableDeclarationAST : public ExpressionAST {
+  const std::string varName;
+  const std::shared_ptr<ExpressionAST> value;
+
+  VariableDeclarationAST(std::string varName, std::shared_ptr<ExpressionAST> value)
+      : varName(std::move(varName)), value(std::move(value)) {}
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const VariableDeclarationAST *>(&o);
+    return other && this->varName == other->varName && *(this->value) == *(other->value);
+  }
+};
+
+struct VariableReferenceAST : public ExpressionAST {
+  const std::string varName;
+
+  explicit VariableReferenceAST(std::string varName) : varName(std::move(varName)) {}
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const VariableReferenceAST *>(&o);
+    return other && this->varName == other->varName;
+  }
+};
+
+// Constructs
 struct ReturnAST : public ExpressionAST {
   const std::shared_ptr<const ExpressionAST> value;
 

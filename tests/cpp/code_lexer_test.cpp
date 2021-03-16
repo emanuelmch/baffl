@@ -84,7 +84,7 @@ TEST(CodeLexer, MainFunction_WithVariable) {
   expected.push(Token(curly_open));
   expected.push(Token(keyword_let));
   expected.push(Token(name, "x"));
-  expected.push(Token(operator_equal));
+  expected.push(Token(operator_assign));
   expected.push(Token(literal_integer, "32"));
   expected.push(Token(semicolon));
   expected.push(Token(keyword_return));

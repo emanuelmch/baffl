@@ -22,22 +22,30 @@
 
 #include "ast.h"
 
-#include <llvm/IR/Verifier.h>
-
-EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
-    : llvmContext(std::move(context)), builder(std::make_shared<llvm::IRBuilder<>>(*llvmContext)),
-      module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), passManager(module.get()) {
-  passManager.doInitialization();
-}
-
-bool EmissionContext::runPasses(llvm::Function *function) {
-  auto verifyFailed = llvm::verifyFunction(*function, &llvm::errs());
-  auto runFailed = passManager.run(*function);
-  return verifyFailed || runFailed;
-}
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Constants.h>
 
 llvm::Value *LiteralIntegerAST::generate(EmissionContext &context) const {
   return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, this->value));
+}
+
+llvm::Value *VariableDeclarationAST::generate(EmissionContext &context) const {
+  auto function = context.builder->GetInsertBlock()->getParent();
+
+  llvm::IRBuilder<> entryBuilder(&function->getEntryBlock(), function->getEntryBlock().begin());
+  auto alloca = entryBuilder.CreateAlloca(llvm::Type::getInt32Ty(*context.llvmContext), nullptr, this->varName);
+  context.addVariable(this->varName, alloca);
+
+  assert(this->value);
+  auto initialValue = this->value->generate(context);
+  context.builder->CreateStore(initialValue, alloca);
+
+  return alloca;
+}
+
+llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
+  auto variable = context.getVariable(this->varName);
+  return context.builder->CreateLoad(variable);
 }
 
 llvm::Value *ReturnAST::generate(EmissionContext &context) const {
@@ -52,7 +60,7 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
   context.builder->SetInsertPoint(entryBlock);
 
-  for (auto expression : body) {
+  for (const auto& expression : body) {
     expression->generate(context);
   }
 
