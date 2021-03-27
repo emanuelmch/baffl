@@ -23,7 +23,7 @@
 #include "code_emitter.h"
 #include "code_lexer.h"
 #include "code_parser.h"
-#include "utils/file_reader.h"
+#include "cpp/helpers/file_reader.h"
 
 #include <iostream>
 

@@ -22,8 +22,9 @@
 
 #include "cpp/code_parser.h"
 
-#include "helpers/ast.h"
-#include "helpers/ast_builder.h"
+#include "test_helpers/ast.h"
+#include "test_helpers/ast_builder.h"
+#include "test_helpers/lexer.h"
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -31,17 +32,17 @@
 TEST(CodeLexer, MainFunction_Trivial) {
   // fun main(): i32 { return 0; }
   std::queue<Token> input;
-  input.push(Token(keyword_function));
-  input.push(Token(name, "main"));
-  input.push(Token(bracket_open));
-  input.push(Token(bracket_close));
-  input.push(Token(colon));
-  input.push(Token(name, "i32"));
-  input.push(Token(curly_open));
-  input.push(Token(keyword_return));
-  input.push(Token(literal_integer, "0"));
-  input.push(Token(semicolon));
-  input.push(Token(curly_close));
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, "0");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
 
   auto expected = ASTBuilder::function("main", "i32") //
                       .returnLiteral(0);
@@ -52,49 +53,25 @@ TEST(CodeLexer, MainFunction_Trivial) {
   EXPECT_EQ(actual[0], expected);
 }
 
-TEST(CodeLexer, Trivial_Incorrect) {
-  // fun main(): i32 { return 10; }
-  std::queue<Token> input;
-  input.push(Token(keyword_function));
-  input.push(Token(name, "main"));
-  input.push(Token(bracket_open));
-  input.push(Token(bracket_close));
-  input.push(Token(colon));
-  input.push(Token(name, "i32"));
-  input.push(Token(curly_open));
-  input.push(Token(keyword_return));
-  input.push(Token(literal_integer, "1"));
-  input.push(Token(semicolon));
-  input.push(Token(curly_close));
-
-  auto expected = ASTBuilder::function("main", "i32") //
-                      .returnLiteral(0);
-
-  auto actual = CodeParser::parseTopLevelExpressions(input);
-
-  ASSERT_EQ(actual.size(), 1);
-  EXPECT_NE(actual[0], expected);
-}
-
 TEST(CodeLexer, MainFunction_WithVariable) {
   // fun main(): i32 { let x = 32; return x; }
   std::queue<Token> input;
-  input.push(Token(keyword_function));
-  input.push(Token(name, "main"));
-  input.push(Token(bracket_open));
-  input.push(Token(bracket_close));
-  input.push(Token(colon));
-  input.push(Token(name, "i32"));
-  input.push(Token(curly_open));
-  input.push(Token(keyword_let));
-  input.push(Token(name, "x"));
-  input.push(Token(operator_assign));
-  input.push(Token(literal_integer, "32"));
-  input.push(Token(semicolon));
-  input.push(Token(keyword_return));
-  input.push(Token(name, "x"));
-  input.push(Token(semicolon));
-  input.push(Token(curly_close));
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_let);
+  input.emplace(name, "x");
+  input.emplace(operator_assign);
+  input.emplace(literal_integer, "32");
+  input.emplace(semicolon);
+  input.emplace(keyword_return);
+  input.emplace(name, "x");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
 
   auto expected = ASTBuilder::function("main", "i32") //
                       .declareVariable("x", 32)       //

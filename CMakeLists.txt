@@ -48,7 +48,7 @@ add_library(baffl_lib
 
 add_executable(baffl
         src/cpp/main.cpp
-        src/cpp/utils/file_reader.cpp
+        src/cpp/helpers/file_reader.cpp
         $<TARGET_OBJECTS:baffl_lib>
         )
 
@@ -64,7 +64,7 @@ set(unit_tests
 
 foreach (unit_test_file ${unit_tests})
     get_filename_component(unit_test_name ${unit_test_file} NAME_WE)
-    add_executable(${unit_test_name} ${unit_test_file} $<TARGET_OBJECTS:baffl_lib> tests/cpp/helpers/ast_builder.h)
+    add_executable(${unit_test_name} ${unit_test_file} $<TARGET_OBJECTS:baffl_lib>)
     target_link_libraries(${unit_test_name} gtest gtest_main pthread)
 
     add_test(${unit_test_name} ${unit_test_name})

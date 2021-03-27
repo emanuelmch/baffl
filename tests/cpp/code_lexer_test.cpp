@@ -22,8 +22,8 @@
 
 #include "cpp/code_lexer.h"
 
-#include "helpers/ast.h"
-#include "helpers/lexer.h"
+#include "test_helpers/ast.h"
+#include "test_helpers/lexer.h"
 #include <gtest/gtest.h>
 
 TEST(CodeLexer, MainFunction_Trivial) {
@@ -32,65 +32,44 @@ TEST(CodeLexer, MainFunction_Trivial) {
                "}\n";
 
   std::queue<Token> expected;
-  expected.push(Token(keyword_function));
-  expected.push(Token(name, "main"));
-  expected.push(Token(bracket_open));
-  expected.push(Token(bracket_close));
-  expected.push(Token(colon));
-  expected.push(Token(name, "i32"));
-  expected.push(Token(curly_open));
-  expected.push(Token(keyword_return));
-  expected.push(Token(literal_integer, "0"));
-  expected.push(Token(semicolon));
-  expected.push(Token(curly_close));
+  expected.emplace(keyword_function);
+  expected.emplace(name, "main");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(literal_integer, "0");
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
-}
-
-TEST(CodeLexer, MainFunction_Trivial_Incorrect) {
-  auto input = "fun main(): i32 {\n"
-               "    return 0;\n"
-               "}\n";
-
-  std::queue<Token> expected;
-  expected.push(Token(keyword_function));
-  expected.push(Token(name, "main"));
-  expected.push(Token(bracket_open));
-  expected.push(Token(bracket_close));
-  expected.push(Token(colon));
-  expected.push(Token(name, "i32"));
-  expected.push(Token(curly_open));
-  expected.push(Token(keyword_return));
-  expected.push(Token(literal_integer, "1"));
-  expected.push(Token(semicolon));
-  expected.push(Token(curly_close));
-
-  EXPECT_NE(CodeLexer::tokenise(input), expected);
 }
 
 TEST(CodeLexer, MainFunction_WithVariable) {
   auto input = "fun main(): i32 {\n"
                "    let x = 32;\n"
-               "    return 0;\n"
+               "    return x;\n"
                "}\n";
 
   std::queue<Token> expected;
-  expected.push(Token(keyword_function));
-  expected.push(Token(name, "main"));
-  expected.push(Token(bracket_open));
-  expected.push(Token(bracket_close));
-  expected.push(Token(colon));
-  expected.push(Token(name, "i32"));
-  expected.push(Token(curly_open));
-  expected.push(Token(keyword_let));
-  expected.push(Token(name, "x"));
-  expected.push(Token(operator_assign));
-  expected.push(Token(literal_integer, "32"));
-  expected.push(Token(semicolon));
-  expected.push(Token(keyword_return));
-  expected.push(Token(literal_integer, "0"));
-  expected.push(Token(semicolon));
-  expected.push(Token(curly_close));
+  expected.emplace(keyword_function);
+  expected.emplace(name, "main");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_let);
+  expected.emplace(name, "x");
+  expected.emplace(operator_assign);
+  expected.emplace(literal_integer, "32");
+  expected.emplace(semicolon);
+  expected.emplace(keyword_return);
+  expected.emplace(name, "x");
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
