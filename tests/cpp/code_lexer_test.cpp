@@ -26,7 +26,7 @@
 #include "test_helpers/lexer.h"
 #include <gtest/gtest.h>
 
-TEST(CodeLexer, MainFunction_Trivial) {
+TEST(CodeLexer, TrivialFunction) {
   auto input = "fun main(): i32 {\n"
                "    return 0;\n"
                "}\n";
@@ -47,7 +47,7 @@ TEST(CodeLexer, MainFunction_Trivial) {
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
 
-TEST(CodeLexer, MainFunction_WithVariable) {
+TEST(CodeLexer, FunctionWithVariable) {
   auto input = "fun main(): i32 {\n"
                "    let x = 32;\n"
                "    return x;\n"

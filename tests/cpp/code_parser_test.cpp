@@ -29,7 +29,7 @@
 
 #include <memory>
 
-TEST(CodeLexer, MainFunction_Trivial) {
+TEST(CodeLexer, TrivialFunction) {
   // fun main(): i32 { return 0; }
   std::queue<Token> input;
   input.emplace(keyword_function);
@@ -53,7 +53,7 @@ TEST(CodeLexer, MainFunction_Trivial) {
   EXPECT_EQ(actual[0], expected);
 }
 
-TEST(CodeLexer, MainFunction_WithVariable) {
+TEST(CodeLexer, FunctionWithVariable) {
   // fun main(): i32 { let x = 32; return x; }
   std::queue<Token> input;
   input.emplace(keyword_function);
