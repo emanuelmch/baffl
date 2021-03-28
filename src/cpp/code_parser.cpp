@@ -31,11 +31,23 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     std::shared_ptr<ExpressionAST> returnValue;
     if (tokens->front().id() == literal_integer) {
       returnValue = std::make_shared<LiteralIntegerAST>(tokens->front().valueAsInt());
+      tokens->pop();
     } else {
       assert(tokens->front().id() == name);
-      returnValue = std::make_shared<VariableReferenceAST>(tokens->front().valueAsString());
+      // We can't tell yet whether it's a variable or a function call
+      auto thingName = tokens->front().valueAsString();
+      tokens->pop();
+
+      if (tokens->front().id() == bracket_open) {
+        tokens->pop();
+        assert(tokens->front().id() == bracket_close);
+        tokens->pop();
+        returnValue = std::make_shared<FunctionCallAST>(thingName);
+      } else {
+        returnValue = std::make_shared<VariableReferenceAST>(thingName);
+      }
+      assert(tokens->front().id() == semicolon);
     }
-    tokens->pop();
 
     statement = std::make_shared<ReturnAST>(returnValue);
     break;

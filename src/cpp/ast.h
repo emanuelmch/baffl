@@ -27,6 +27,8 @@
 
 #include <llvm/IR/Value.h>
 
+#include <utility>
+
 // Interfaces
 struct AST {
   virtual llvm::Value *generate(EmissionContext &) const = 0;
@@ -86,22 +88,9 @@ struct VariableReferenceAST : public ExpressionAST {
   }
 };
 
-// Constructs
-struct ReturnAST : public ExpressionAST {
-  const std::shared_ptr<const ExpressionAST> value;
+// Functions
 
-  explicit ReturnAST(std::shared_ptr<const ExpressionAST> value) : value(std::move(value)) {}
-  ~ReturnAST() override = default;
-
-  llvm::Value *generate(EmissionContext &) const override;
-
-  inline bool operator==(const AST &o) const override {
-    auto other = dynamic_cast<const ReturnAST *>(&o);
-    return other && *(this->value) == *(other->value);
-  }
-};
-
-struct FunctionAST : TopLevelAST {
+struct FunctionAST : public TopLevelAST {
   const std::string name;
   const std::string returnType;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
@@ -131,5 +120,34 @@ struct FunctionAST : TopLevelAST {
     }
 
     return true;
+  }
+};
+
+struct FunctionCallAST : public ExpressionAST {
+  const std::string functionName;
+
+  explicit FunctionCallAST(std::string functionName) : functionName(std::move(functionName)) {}
+  ~FunctionCallAST() override = default;
+
+  llvm::Value *generate(EmissionContext &context) const override;
+
+  bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const FunctionCallAST *>(&o);
+    return other && this->functionName == other->functionName;
+  }
+};
+
+// Constructs
+struct ReturnAST : public ExpressionAST {
+  const std::shared_ptr<const ExpressionAST> value;
+
+  explicit ReturnAST(std::shared_ptr<const ExpressionAST> value) : value(std::move(value)) {}
+  ~ReturnAST() override = default;
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const ReturnAST *>(&o);
+    return other && *(this->value) == *(other->value);
   }
 };

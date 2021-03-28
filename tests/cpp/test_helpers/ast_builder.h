@@ -51,6 +51,14 @@ struct ASTBuilder {
     return *this;
   }
 
+  inline ASTBuilder returnFunctionCall(std::string functionName) {
+    auto functionCallAst = std::make_shared<FunctionCallAST>(std::move(functionName));
+    auto returnAst = std::make_shared<ReturnAST>(functionCallAst);
+    body.push_back(returnAst);
+
+    return *this;
+  }
+
   inline ASTBuilder returnVariable(std::string varName) {
     auto varReferenceAst = std::make_shared<VariableReferenceAST>(std::move(varName));
     auto returnAst = std::make_shared<ReturnAST>(varReferenceAst);

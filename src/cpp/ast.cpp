@@ -48,11 +48,6 @@ llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
   return context.builder->CreateLoad(variable);
 }
 
-llvm::Value *ReturnAST::generate(EmissionContext &context) const {
-  auto returnValue = this->value->generate(context);
-  return context.builder->CreateRet(returnValue);
-}
-
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context.llvmContext), false);
   auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, "main", context.module.get());
@@ -66,4 +61,13 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
 
   context.runPasses(function);
   return function;
+}
+
+llvm::Value * FunctionCallAST::generate(EmissionContext &) const {
+  return nullptr;
+}
+
+llvm::Value *ReturnAST::generate(EmissionContext &context) const {
+  auto returnValue = this->value->generate(context);
+  return context.builder->CreateRet(returnValue);
 }

@@ -27,13 +27,13 @@
 #include <gtest/gtest.h>
 
 TEST(CodeLexer, TrivialFunction) {
-  auto input = "fun main(): i32 {\n"
+  auto input = "fun thisIsAFunction(): i32 {\n"
                "    return 0;\n"
                "}\n";
 
   std::queue<Token> expected;
   expected.emplace(keyword_function);
-  expected.emplace(name, "main");
+  expected.emplace(name, "thisIsAFunction");
   expected.emplace(bracket_open);
   expected.emplace(bracket_close);
   expected.emplace(colon);
@@ -68,6 +68,29 @@ TEST(CodeLexer, FunctionWithVariable) {
   expected.emplace(semicolon);
   expected.emplace(keyword_return);
   expected.emplace(name, "x");
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
+TEST(CodeLexer, FunctionCall) {
+  auto input = "fun main(): i32 {\n"
+               "    return functionCall();\n"
+               "}\n";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "main");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(name, "functionCall");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
   expected.emplace(semicolon);
   expected.emplace(curly_close);
 
