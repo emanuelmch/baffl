@@ -75,6 +75,7 @@ endforeach (unit_test_file)
 set(integration_tests
         tests/integration/empty.baffl
         tests/integration/error_code.baffl
+        tests/integration/function_call.baffl
         tests/integration/variable.baffl
         )
 

@@ -91,8 +91,6 @@ inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Mo
 
 int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &topLevel,
                                 const std::string &outputFile, bool isVerbose) {
-  assert(topLevel.size() == 1);
-
   llvm::InitializeAllTargetInfos();
   llvm::InitializeAllTargets();
   llvm::InitializeAllTargetMCs();

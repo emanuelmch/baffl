@@ -52,7 +52,18 @@ struct EmissionContext {
     return variables[name];
   }
 
+  inline void addFunction(const std::string &name, llvm::Function *function) {
+    assert(functions.count(name) == 0);
+    functions[name] = function;
+  }
+
+  inline llvm::Function *getFunction(const std::string &name) {
+    assert(functions.count(name));
+    return functions[name];
+  }
+
 private:
   std::map<std::string, llvm::AllocaInst *> variables;
+  std::map<std::string, llvm::Function *> functions;
   llvm::legacy::FunctionPassManager passManager;
 };
