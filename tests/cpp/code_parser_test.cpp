@@ -29,7 +29,7 @@
 
 #include <memory>
 
-TEST(CodeLexer, TrivialFunction) {
+TEST(CodeParser, TrivialFunction) {
   // fun main(): i32 { return 0; }
   std::queue<Token> input;
   input.emplace(keyword_function);
@@ -53,7 +53,7 @@ TEST(CodeLexer, TrivialFunction) {
   EXPECT_EQ(actual[0], expected);
 }
 
-TEST(CodeLexer, FunctionWithVariable) {
+TEST(CodeParser, FunctionWithVariable) {
   // fun main(): i32 { let x = 32; return x; }
   std::queue<Token> input;
   input.emplace(keyword_function);
@@ -84,7 +84,7 @@ TEST(CodeLexer, FunctionWithVariable) {
   EXPECT_EQ(actual[0], expected);
 }
 
-TEST(CodeLexer, FunctionCall) {
+TEST(CodeParser, FunctionCall) {
   // fun main(): i32 { return functionCall(); }
   std::queue<Token> input;
   input.emplace(keyword_function);
@@ -109,4 +109,42 @@ TEST(CodeLexer, FunctionCall) {
 
   ASSERT_EQ(actual.size(), 1);
   EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, MultipleFunction) {
+  // fun f1(): i32 { return 1; } fun f2(): i32 { return 2; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "f1");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, "1");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  input.emplace(keyword_function);
+  input.emplace(name, "f2");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, "2");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto f1 = ASTBuilder::function("f1", "i32").returnLiteral(1);
+  auto f2 = ASTBuilder::function("f2", "i32").returnLiteral(2);
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 2);
+  EXPECT_EQ(actual[0], f1);
+  EXPECT_EQ(actual[1], f2);
 }

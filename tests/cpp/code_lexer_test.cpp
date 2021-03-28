@@ -96,3 +96,36 @@ TEST(CodeLexer, FunctionCall) {
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
+
+TEST(CodeLexer, MultipleFunction) {
+  // fun f1(): i32 { return 1; } fun f2(): i32 { return 2; }
+  auto input = "fun f1(): i32 { return 1; }\n"
+               "fun f2(): i32 { return 2; }\n";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "f1");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(literal_integer, "1");
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  expected.emplace(keyword_function);
+  expected.emplace(name, "f2");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(literal_integer, "2");
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}

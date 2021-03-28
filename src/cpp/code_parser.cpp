@@ -95,8 +95,6 @@ inline static std::vector<std::shared_ptr<const ExpressionAST>> readBody(std::qu
   }
   tokens->pop();
 
-  assert(tokens->empty());
-
   return body;
 }
 

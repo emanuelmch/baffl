@@ -24,6 +24,8 @@
 
 #include <utility>
 
+#include "ast.h"
+
 #include "cpp/ast.h"
 
 struct ASTBuilder {
@@ -81,3 +83,10 @@ bool operator==(const std::shared_ptr<TopLevelAST> &ast, const ASTBuilder &build
   if (!ast) return false;
   return *ast == *(builder.build());
 }
+
+namespace std {
+
+void PrintTo(const ASTBuilder &astBuilder, std::ostream *os) {
+  PrintTo(*astBuilder.build(), os);
+}
+};
