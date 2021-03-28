@@ -22,33 +22,39 @@
 
 #include "code_parser.h"
 
+inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *tokens) {
+  std::shared_ptr<ExpressionAST> expression;
+
+  if (tokens->front().id() == literal_integer) {
+    expression = std::make_shared<LiteralIntegerAST>(tokens->front().valueAsInt());
+    tokens->pop();
+  } else {
+    assert(tokens->front().id() == name);
+    // We can't tell yet whether it's a variable or a function call
+    auto thingName = tokens->front().valueAsString();
+    tokens->pop();
+
+    if (tokens->front().id() == bracket_open) {
+      tokens->pop();
+      assert(tokens->front().id() == bracket_close);
+      tokens->pop();
+      expression = std::make_shared<FunctionCallAST>(thingName);
+    } else {
+      expression = std::make_shared<VariableReferenceAST>(thingName);
+    }
+    assert(tokens->front().id() == semicolon);
+  }
+
+  return expression;
+}
+
 inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *tokens) {
   std::shared_ptr<ExpressionAST> statement;
 
   switch (tokens->front().id()) {
   case keyword_return: {
     tokens->pop();
-    std::shared_ptr<ExpressionAST> returnValue;
-    if (tokens->front().id() == literal_integer) {
-      returnValue = std::make_shared<LiteralIntegerAST>(tokens->front().valueAsInt());
-      tokens->pop();
-    } else {
-      assert(tokens->front().id() == name);
-      // We can't tell yet whether it's a variable or a function call
-      auto thingName = tokens->front().valueAsString();
-      tokens->pop();
-
-      if (tokens->front().id() == bracket_open) {
-        tokens->pop();
-        assert(tokens->front().id() == bracket_close);
-        tokens->pop();
-        returnValue = std::make_shared<FunctionCallAST>(thingName);
-      } else {
-        returnValue = std::make_shared<VariableReferenceAST>(thingName);
-      }
-      assert(tokens->front().id() == semicolon);
-    }
-
+    auto returnValue = readExpression(tokens);
     statement = std::make_shared<ReturnAST>(returnValue);
     break;
   }
@@ -59,10 +65,7 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     tokens->pop();
     assert(tokens->front().id() == operator_assign);
     tokens->pop();
-    assert(tokens->front().id() == literal_integer);
-    auto initialValue = std::make_shared<LiteralIntegerAST>(tokens->front().valueAsInt());
-    tokens->pop();
-
+    auto initialValue = readExpression(tokens);
     statement = std::make_shared<VariableDeclarationAST>(varName, initialValue);
     break;
   }
