@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "cpp/ast.h"
+#include "ast.h"
 
 #include <ostream>
 

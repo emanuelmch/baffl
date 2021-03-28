@@ -1,0 +1,9 @@
+fun otherFunction(): i32 {
+	let x = 123;
+	return x;
+}
+
+fun main(): i32 {
+	let x = otherFunction();
+	return x;
+}

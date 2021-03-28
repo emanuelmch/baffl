@@ -26,7 +26,7 @@
 
 #include "ast.h"
 
-#include "cpp/ast.h"
+#include "ast.h"
 
 struct ASTBuilder {
   static inline ASTBuilder function(std::string name, std::string returnType) {

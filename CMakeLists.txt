@@ -22,7 +22,7 @@
 
 cmake_minimum_required(VERSION 3.0)
 project(BAFFL VERSION 0.1 LANGUAGES CXX)
-include_directories(src)
+include_directories(src/cpp)
 
 if (NOT CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     message(FATAL_ERROR "we need to be built by clang because of LLVM interop")
@@ -77,6 +77,7 @@ set(integration_tests
         tests/integration/error_code.baffl
         tests/integration/function_call.baffl
         tests/integration/variable.baffl
+        tests/integration/variable_scope.baffl
         )
 
 foreach (testfile ${integration_tests})

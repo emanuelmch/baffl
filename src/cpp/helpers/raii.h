@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Emanuel Machado da Silva
+ * Copyright (c) 2021 Emanuel Machado da Silva
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,42 +20,15 @@
  * SOFTWARE.
  */
 
-#include "code_emitter.h"
-#include "code_lexer.h"
-#include "code_parser.h"
-#include "helpers/file_reader.h"
+#pragma once
 
-#include <iostream>
+#include <functional>
+#include <utility>
 
-int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    std::cerr << "Usage: baffl input.baffl -[v]o output" << std::endl;
-    return 1;
-  }
+struct RunnerScopeGuard {
+  explicit RunnerScopeGuard(std::function<void()> function) : function(std::move(function)) {}
+  ~RunnerScopeGuard() { function(); }
 
-  bool isVerbose = false;
-  {
-    std::string outputParameterIndicator(argv[2]);
-    if (outputParameterIndicator == "-vo") {
-      isVerbose = true;
-    } else if (outputParameterIndicator != "-o") {
-      std::cerr << "Wrong arguments" << std::endl;
-      return 1;
-    }
-  }
-
-  std::string input(argv[1]);
-  std::string output(argv[3]);
-
-  auto fileContents = FileReader::readWholeFile(input);
-
-  auto tokens = CodeLexer::tokenise(fileContents);
-  if (tokens.empty()) {
-    std::cerr << "Lexer couldn't create any tokens" << std::endl;
-    return 1;
-  }
-
-  auto topLevel = CodeParser::parseTopLevelExpressions(tokens);
-
-  return CodeEmitter::emitObjectFile(topLevel, output, isVerbose);
-}
+private:
+  std::function<void()> function;
+};

@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include "helpers/raii.h"
+
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
@@ -30,9 +32,33 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <utility>
 
 // FIXME: Remove this line, but CLion is driving me crazy
 typedef u_int64_t uint64_t;
+
+struct Scope {
+  Scope *parent;
+
+  explicit Scope(Scope *parent) : parent(parent) {}
+
+  inline void addVariable(const std::string &name, llvm::AllocaInst *alloca) {
+    assert(variables.count(name) == 0);
+    variables[name] = alloca;
+  }
+
+  inline llvm::AllocaInst *getVariable(const std::string &name) {
+    if (variables.count(name)) {
+      return variables[name];
+    }
+
+    assert(parent != nullptr);
+    return parent->getVariable(name);
+  }
+
+private:
+  std::map<std::string, llvm::AllocaInst *> variables;
+};
 
 struct EmissionContext {
   std::shared_ptr<llvm::LLVMContext> llvmContext;
@@ -42,14 +68,24 @@ struct EmissionContext {
   explicit EmissionContext(std::shared_ptr<llvm::LLVMContext>);
   bool runPasses(llvm::Function *);
 
+  inline RunnerScopeGuard pushScope() {
+    auto level = ++currentLevel;
+    this->scope = new Scope{this->scope};
+    return RunnerScopeGuard{[this, level] {
+      assert(currentLevel == level);
+      scope = scope->parent;
+      currentLevel--;
+    }};
+  }
+
   inline void addVariable(const std::string &name, llvm::AllocaInst *alloca) {
-    assert(variables.count(name) == 0);
-    variables[name] = alloca;
+    assert(scope != nullptr);
+    scope->addVariable(name, alloca);
   }
 
   inline llvm::AllocaInst *getVariable(const std::string &name) {
-    assert(variables.count(name));
-    return variables[name];
+    assert(scope != nullptr);
+    return scope->getVariable(name);
   }
 
   inline void addFunction(const std::string &name, llvm::Function *function) {
@@ -63,7 +99,8 @@ struct EmissionContext {
   }
 
 private:
-  std::map<std::string, llvm::AllocaInst *> variables;
+  Scope *scope = nullptr;
+  uint_fast8_t currentLevel = 0;
   std::map<std::string, llvm::Function *> functions;
   llvm::legacy::FunctionPassManager passManager;
 };

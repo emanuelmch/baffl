@@ -20,10 +20,11 @@
  * SOFTWARE.
  */
 
-#include "cpp/code_lexer.h"
+#include "code_lexer.h"
 
-#include "test_helpers/ast.h"
-#include "test_helpers/lexer.h"
+#include "test_helpers/test_ast.h"
+#include "test_helpers/test_lexer.h"
+
 #include <gtest/gtest.h>
 
 TEST(CodeLexer, TrivialFunction) {

@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "cpp/code_lexer.h"
+#include "code_lexer.h"
 
 #include <ostream>
 #include <queue>
