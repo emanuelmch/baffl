@@ -22,8 +22,8 @@
 
 #include "ast.h"
 
-#include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/IRBuilder.h>
 
 llvm::Value *LiteralIntegerAST::generate(EmissionContext &context) const {
   return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, this->value));
@@ -49,15 +49,44 @@ llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
 }
 
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {
-  auto functionType = llvm::FunctionType::get(llvm::Type::getInt32Ty(*context.llvmContext), false);
-  auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, this->name, context.module.get());
+  auto scopeGuard = context.pushScope();
+
+  auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
+  std::vector<llvm::Type *> argumentTypes;
+  for (auto argument : arguments) {
+    auto argumentType = std::get<1>(argument);
+    assert(argumentType == "i32");
+    argumentTypes.emplace_back(i32Type);
+  }
+
+  auto functionType = llvm::FunctionType::get(i32Type, argumentTypes, false);
+  auto function =
+      llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, this->name, context.module.get());
   context.addFunction(this->name, function);
 
   auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
   context.builder->SetInsertPoint(entryBlock);
 
-  auto scopeGuard = context.pushScope();
-  for (const auto& expression : body) {
+  auto functionArgumentIterator = function->arg_begin();
+  auto argumentIterator = this->arguments.cbegin();
+
+  while (functionArgumentIterator != function->arg_end()) {
+    assert(argumentIterator != this->arguments.cend());
+
+    auto &functionArgument = (*functionArgumentIterator);
+    auto argumentName = std::get<0>(*argumentIterator);
+    functionArgument.setName(argumentName);
+
+    // TODO: Could we use a VariableRefAST instead of copying the code?
+    auto alloca = context.builder->CreateAlloca(llvm::Type::getInt32Ty(*context.llvmContext), nullptr, argumentName);
+    context.builder->CreateStore(&functionArgument, alloca);
+    context.addVariable(argumentName, alloca);
+
+    ++functionArgumentIterator;
+    ++argumentIterator;
+  }
+
+  for (const auto &expression : body) {
     expression->generate(context);
   }
 
@@ -66,9 +95,14 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   return function;
 }
 
-llvm::Value * FunctionCallAST::generate(EmissionContext &context) const {
+llvm::Value *FunctionCallAST::generate(EmissionContext &context) const {
   auto function = context.getFunction(this->functionName);
-  return context.builder->CreateCall(function);
+  std::vector<llvm::Value *> argumentValues;
+  for (const auto &argument : this->arguments) {
+    argumentValues.push_back(argument->generate(context));
+  }
+
+  return context.builder->CreateCall(function, argumentValues);
 }
 
 llvm::Value *ReturnAST::generate(EmissionContext &context) const {

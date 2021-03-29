@@ -34,12 +34,6 @@ void PrintTo(const LiteralIntegerAST &literalAST, std::ostream *os) {
   *os << "LiteralIntegerAST {" << literalAST.value << "}";
 }
 
-void PrintTo(const ReturnAST &returnAST, std::ostream *os) {
-  *os << "ReturnAST { ";
-  PrintTo(*returnAST.value, os);
-  *os << " }";
-}
-
 void PrintTo(const VariableDeclarationAST &varDecAST, std::ostream *os) {
   *os << "VarDecAST { " << varDecAST.varName << ", ";
   PrintTo(*varDecAST.value, os);
@@ -47,30 +41,48 @@ void PrintTo(const VariableDeclarationAST &varDecAST, std::ostream *os) {
 }
 
 void PrintTo(const VariableReferenceAST &varRefAST, std::ostream *os) {
-  *os << "VarRefAST {" << varRefAST.varName << "}";
+  *os << "VarRefAST { " << varRefAST.varName << " }";
+}
+
+void PrintTo(const FunctionCallAST &functionCallAST, std::ostream *os) {
+  *os << "FunctionCallAST { " << functionCallAST.functionName << " }";
+}
+
+void PrintTo(const ReturnAST &returnAST, std::ostream *os) {
+  *os << "ReturnAST { ";
+  PrintTo(*returnAST.value, os);
+  *os << " }";
 }
 
 void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto literalIntegerAST = dynamic_cast<const LiteralIntegerAST *>(&expressionAST);
-  auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
   auto varDecAST = dynamic_cast<const VariableDeclarationAST *>(&expressionAST);
-  auto varRefAST = dynamic_cast<const VariableReferenceAST*>(&expressionAST);
+  auto varRefAST = dynamic_cast<const VariableReferenceAST *>(&expressionAST);
+  auto functionCallAST = dynamic_cast<const FunctionCallAST *>(&expressionAST);
+  auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
 
   if (literalIntegerAST) {
     PrintTo(*literalIntegerAST, os);
-  } else if (returnAST) {
-    PrintTo(*returnAST, os);
   } else if (varDecAST) {
     PrintTo(*varDecAST, os);
   } else if (varRefAST) {
     PrintTo(*varRefAST, os);
+  } else if (functionCallAST) {
+    PrintTo(*functionCallAST, os);
+  } else if (returnAST) {
+    PrintTo(*returnAST, os);
   } else {
     *os << "Unknown Expression AST!!!";
   }
 }
 
 void PrintTo(const FunctionAST &functionAST, std::ostream *os) {
-  *os << "FunctionAST { name: [" << functionAST.name << "], expressions[" << functionAST.body.size() << "]: { ";
+  *os << "FunctionAST { " << functionAST.name << ": " << functionAST.returnType << ", arguments { ";
+  for (const auto &argument : functionAST.arguments) {
+    const auto &[name, type] = argument;
+    *os << name << ": " << type << ", ";
+  }
+  *os << "}, expressions[" << functionAST.body.size() << "]: { ";
   for (const auto &expression : functionAST.body) {
     PrintTo(*expression, os);
     *os << ", ";

@@ -36,6 +36,7 @@ enum TokenType : uint8_t {
   curly_close,      // }
   colon,            // :
   semicolon,        // ;
+  comma,            // ,
   operator_assign,  // =
   name,             // name
   literal_integer,  // integer

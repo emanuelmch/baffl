@@ -1,0 +1,7 @@
+fun randomFunction(x: i32): i32 {
+	return x;
+}
+
+fun main(): i32 {
+	return randomFunction(48);
+}

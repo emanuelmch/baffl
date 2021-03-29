@@ -112,7 +112,36 @@ TEST(CodeParser, FunctionCall) {
   EXPECT_EQ(actual[0], expected);
 }
 
-TEST(CodeParser, MultipleFunction) {
+TEST(CodeLexer, FunctionCallWithOneArgument) {
+  // fun main(): i32 { return functionCall(123); }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(name, "functionCall");
+  input.emplace(bracket_open);
+  input.emplace(literal_integer, "123");
+  input.emplace(bracket_close);
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("main", "i32")     //
+      .returnFunctionCall("functionCall", 123) //
+      .build();
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, MultipleFunctions) {
   // fun f1(): i32 { return 1; } fun f2(): i32 { return 2; }
 
   std::queue<Token> input;
@@ -148,4 +177,34 @@ TEST(CodeParser, MultipleFunction) {
   ASSERT_EQ(actual.size(), 2);
   EXPECT_EQ(actual[0], f1);
   EXPECT_EQ(actual[1], f2);
+}
+
+TEST(CodeParser, FunctionWithOneArgument) {
+  // fun main(x: i32): i32 { return x; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(name, "x");
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(name, "x");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("main", "i32") //
+                      .addArgument("x", "i32")        //
+                      .returnVariable("x")            //
+                      .build();
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
 }

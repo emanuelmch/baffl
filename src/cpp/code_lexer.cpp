@@ -48,6 +48,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case semicolon:
     os << "`;`";
     break;
+  case comma:
+    os << ",";
+    break;
   case operator_assign:
     os << "`=`";
     break;

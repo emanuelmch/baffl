@@ -29,14 +29,20 @@
 #include "ast.h"
 
 struct ASTBuilder {
-  static inline ASTBuilder function(std::string name, std::string returnType) {
+  static inline ASTBuilder function(const std::string &name, const std::string &returnType) {
     ASTBuilder builder;
-    builder.name = std::move(name);
-    builder.returnType = std::move(returnType);
+    builder.functionName = name;
+    builder.functionReturnType = returnType;
     return builder;
   }
 
-  inline ASTBuilder declareVariable(std::string varName, uint64_t value) {
+  inline ASTBuilder addArgument(const std::string &name, const std::string &type) {
+    functionArguments.emplace_back(name, type);
+
+    return *this;
+  }
+
+  inline ASTBuilder declareVariable(const std::string &varName, uint64_t value) {
     auto literalAst = std::make_shared<LiteralIntegerAST>(value);
     VariableDeclarationAST test(varName, literalAst);
     auto declarationAst = std::make_shared<VariableDeclarationAST>(varName, literalAst);
@@ -53,14 +59,23 @@ struct ASTBuilder {
     return *this;
   }
 
-  inline ASTBuilder returnFunctionCall(std::string functionName) {
-    auto functionCallAst = std::make_shared<FunctionCallAST>(std::move(functionName));
+  inline ASTBuilder returnFunctionCall(std::string name) {
+    auto functionCallAst = std::make_shared<FunctionCallAST>(std::move(name));
     auto returnAst = std::make_shared<ReturnAST>(functionCallAst);
     body.push_back(returnAst);
 
     return *this;
   }
 
+  inline ASTBuilder returnFunctionCall(std::string name, uint64_t argument0) {
+    auto integerLiteralAst = std::make_shared<LiteralIntegerAST>(argument0);
+    std::vector<std::shared_ptr<ExpressionAST>> arguments{integerLiteralAst};
+    auto functionCallAst = std::make_shared<FunctionCallAST>(std::move(name), arguments);
+    auto returnAst = std::make_shared<ReturnAST>(functionCallAst);
+    body.push_back(returnAst);
+
+    return *this;
+  }
   inline ASTBuilder returnVariable(std::string varName) {
     auto varReferenceAst = std::make_shared<VariableReferenceAST>(std::move(varName));
     auto returnAst = std::make_shared<ReturnAST>(varReferenceAst);
@@ -70,12 +85,13 @@ struct ASTBuilder {
   }
 
   [[nodiscard]] inline std::shared_ptr<AST> build() const {
-    return std::make_shared<FunctionAST>(name, returnType, body);
+    return std::make_shared<FunctionAST>(functionName, functionReturnType, functionArguments, body);
   }
 
 private:
-  std::string name;
-  std::string returnType;
+  std::string functionName;
+  std::string functionReturnType;
+  std::vector<std::tuple<std::string, std::string>> functionArguments;
   std::vector<std::shared_ptr<const ExpressionAST>> body;
 };
 

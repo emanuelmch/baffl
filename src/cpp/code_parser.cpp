@@ -35,10 +35,19 @@ inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *t
     tokens->pop();
 
     if (tokens->front().id() == bracket_open) {
+      std::vector<std::shared_ptr<ExpressionAST>> arguments;
+
       tokens->pop();
+      while(tokens->front().id() != bracket_close) {
+        arguments.push_back(readExpression(tokens));
+        if (tokens->front().id() == comma) {
+          tokens->pop();
+        }
+      }
       assert(tokens->front().id() == bracket_close);
       tokens->pop();
-      expression = std::make_shared<FunctionCallAST>(thingName);
+
+      expression = std::make_shared<FunctionCallAST>(thingName, arguments);
     } else {
       expression = std::make_shared<VariableReferenceAST>(thingName);
     }
@@ -79,6 +88,21 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
   return statement;
 }
 
+inline static std::tuple<std::string,std::string> readArgument(std::queue<Token> *tokens) {
+  assert(tokens->front().id() == TokenType::name);
+  auto name = tokens->front().valueAsString();
+  tokens->pop();
+
+  assert(tokens->front().id() == colon);
+  tokens->pop();
+
+  assert(tokens->front().id() == TokenType::name);
+  auto type = tokens->front().valueAsString();
+  tokens->pop();
+
+  return std::make_tuple(name, type);
+}
+
 inline static std::vector<std::shared_ptr<const ExpressionAST>> readBody(std::queue<Token> *tokens) {
   // FIXME: make this generic
   assert(tokens->front().id() == curly_open);
@@ -99,6 +123,7 @@ inline static std::vector<std::shared_ptr<const ExpressionAST>> readBody(std::qu
 }
 
 inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
+  std::vector<std::tuple<std::string, std::string>> arguments;
   // FIXME: make this generic
   assert(tokens->front().id() == keyword_function);
   tokens->pop();
@@ -109,6 +134,13 @@ inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
 
   assert(tokens->front().id() == bracket_open);
   tokens->pop();
+
+  if (tokens->front().id() == TokenType::name) {
+    arguments.push_back(readArgument(tokens));
+    while (tokens->front().id() == TokenType::comma) {
+      arguments.push_back(readArgument(tokens));
+    }
+  }
 
   assert(tokens->front().id() == bracket_close);
   tokens->pop();
@@ -121,7 +153,7 @@ inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
   tokens->pop();
 
   auto body = readBody(tokens);
-  return std::make_shared<FunctionAST>(name, returnType, body);
+  return std::make_shared<FunctionAST>(name, returnType, arguments, body);
 }
 
 std::vector<std::shared_ptr<TopLevelAST>> CodeParser::parseTopLevelExpressions(std::queue<Token> input) {

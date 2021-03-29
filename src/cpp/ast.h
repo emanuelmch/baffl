@@ -93,10 +93,13 @@ struct VariableReferenceAST : public ExpressionAST {
 struct FunctionAST : public TopLevelAST {
   const std::string name;
   const std::string returnType;
+  const std::vector<std::tuple<std::string, std::string>> arguments;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
 
-  FunctionAST(std::string name, std::string returnType, std::vector<std::shared_ptr<const ExpressionAST>> body)
-      : name(std::move(name)), returnType(std::move(returnType)), body(std::move(body)) {}
+  FunctionAST(std::string name, std::string returnType, std::vector<std::tuple<std::string, std::string>> arguments,
+              std::vector<std::shared_ptr<const ExpressionAST>> body)
+      : name(std::move(name)), returnType(std::move(returnType)), arguments(std::move(arguments)),
+        body(std::move(body)) {}
   ~FunctionAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;
@@ -125,8 +128,10 @@ struct FunctionAST : public TopLevelAST {
 
 struct FunctionCallAST : public ExpressionAST {
   const std::string functionName;
+  const std::vector<std::shared_ptr<ExpressionAST>> arguments;
 
-  explicit FunctionCallAST(std::string functionName) : functionName(std::move(functionName)) {}
+  explicit FunctionCallAST(std::string functionName, std::vector<std::shared_ptr<ExpressionAST>> arguments = {})
+      : functionName(std::move(functionName)), arguments(std::move(arguments)) {}
   ~FunctionCallAST() override = default;
 
   llvm::Value *generate(EmissionContext &context) const override;
