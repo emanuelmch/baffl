@@ -38,8 +38,9 @@ inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *t
       std::vector<std::shared_ptr<ExpressionAST>> arguments;
 
       tokens->pop();
-      while(tokens->front().id() != bracket_close) {
+      while (tokens->front().id() != bracket_close) {
         arguments.push_back(readExpression(tokens));
+        assert(tokens->front().id() == comma || tokens->front().id() == bracket_close);
         if (tokens->front().id() == comma) {
           tokens->pop();
         }
@@ -51,7 +52,13 @@ inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *t
     } else {
       expression = std::make_shared<VariableReferenceAST>(thingName);
     }
-    assert(tokens->front().id() == semicolon);
+  }
+
+  // Binary operators
+  if (tokens->front().id() == operator_plus) {
+    tokens->pop();
+    auto right = readExpression(tokens);
+    expression = std::make_shared<PlusOperationAST>(expression, right);
   }
 
   return expression;
@@ -88,7 +95,7 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
   return statement;
 }
 
-inline static std::tuple<std::string,std::string> readArgument(std::queue<Token> *tokens) {
+inline static std::tuple<std::string, std::string> readArgument(std::queue<Token> *tokens) {
   assert(tokens->front().id() == TokenType::name);
   auto name = tokens->front().valueAsString();
   tokens->pop();

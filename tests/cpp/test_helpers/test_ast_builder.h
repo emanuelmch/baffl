@@ -28,6 +28,30 @@
 
 #include "ast.h"
 
+struct ExpressionBuilder {
+
+  inline ExpressionBuilder literal(uint64_t value) {
+    this->first = value;
+    return *this;
+  }
+
+  inline ExpressionBuilder plus(ExpressionBuilder left, ExpressionBuilder right) {
+    this->first = left.first;
+    this->second = right.first;
+    return *this;
+  }
+
+  inline std::shared_ptr<ExpressionAST> build() {
+    auto left = std::make_shared<LiteralIntegerAST>(first);
+    auto right = std::make_shared<LiteralIntegerAST>(second);
+    return std::make_shared<PlusOperationAST>(left, right);
+  }
+
+private:
+  uint64_t first;
+  uint64_t second;
+};
+
 struct ASTBuilder {
   static inline ASTBuilder function(const std::string &name, const std::string &returnType) {
     ASTBuilder builder;
@@ -59,6 +83,14 @@ struct ASTBuilder {
     return *this;
   }
 
+  inline ASTBuilder returnVariable(std::string varName) {
+    auto varReferenceAst = std::make_shared<VariableReferenceAST>(std::move(varName));
+    auto returnAst = std::make_shared<ReturnAST>(varReferenceAst);
+    body.push_back(returnAst);
+
+    return *this;
+  }
+
   inline ASTBuilder returnFunctionCall(std::string name) {
     auto functionCallAst = std::make_shared<FunctionCallAST>(std::move(name));
     auto returnAst = std::make_shared<ReturnAST>(functionCallAst);
@@ -76,9 +108,10 @@ struct ASTBuilder {
 
     return *this;
   }
-  inline ASTBuilder returnVariable(std::string varName) {
-    auto varReferenceAst = std::make_shared<VariableReferenceAST>(std::move(varName));
-    auto returnAst = std::make_shared<ReturnAST>(varReferenceAst);
+
+  inline ASTBuilder returnExpression(const std::function<ExpressionBuilder(ExpressionBuilder)> &lambda) {
+    auto expressionAst = lambda({}).build();
+    auto returnAst = std::make_shared<ReturnAST>(expressionAst);
     body.push_back(returnAst);
 
     return *this;

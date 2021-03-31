@@ -76,8 +76,7 @@ TEST(CodeParser, FunctionWithVariable) {
 
   auto expected = ASTBuilder::function("main", "i32") //
                       .declareVariable("x", 32)       //
-                      .returnVariable("x")
-                      .build();
+                      .returnVariable("x");
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
@@ -103,8 +102,7 @@ TEST(CodeParser, FunctionCall) {
   input.emplace(curly_close);
 
   auto expected = ASTBuilder::function("main", "i32")     //
-                      .returnFunctionCall("functionCall") //
-                      .build();
+                      .returnFunctionCall("functionCall");
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
@@ -131,9 +129,8 @@ TEST(CodeLexer, FunctionCallWithOneArgument) {
   input.emplace(semicolon);
   input.emplace(curly_close);
 
-  auto expected = ASTBuilder::function("main", "i32")     //
-      .returnFunctionCall("functionCall", 123) //
-      .build();
+  auto expected = ASTBuilder::function("main", "i32")          //
+                      .returnFunctionCall("functionCall", 123);
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
@@ -200,8 +197,36 @@ TEST(CodeParser, FunctionWithOneArgument) {
 
   auto expected = ASTBuilder::function("main", "i32") //
                       .addArgument("x", "i32")        //
-                      .returnVariable("x")            //
-                      .build();
+                      .returnVariable("x");
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, MathsPlus) {
+  // fun main(): i32 { return 1 + 2; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, "1");
+  input.emplace(operator_plus);
+  input.emplace(literal_integer, "2");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("main", "i32")              //
+                      .returnExpression([](auto e) {               //
+                        return e.plus(e.literal(1), e.literal(2)); //
+                      });
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 

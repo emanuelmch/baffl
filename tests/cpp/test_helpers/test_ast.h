@@ -54,12 +54,21 @@ void PrintTo(const ReturnAST &returnAST, std::ostream *os) {
   *os << " }";
 }
 
+void PrintTo(const PlusOperationAST &plusAST, std::ostream *os) {
+  *os << "PlusOperationAST { ";
+  PrintTo(*plusAST.left, os);
+  *os << ", ";
+  PrintTo(*plusAST.right, os);
+  *os << " }";
+}
+
 void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto literalIntegerAST = dynamic_cast<const LiteralIntegerAST *>(&expressionAST);
   auto varDecAST = dynamic_cast<const VariableDeclarationAST *>(&expressionAST);
   auto varRefAST = dynamic_cast<const VariableReferenceAST *>(&expressionAST);
   auto functionCallAST = dynamic_cast<const FunctionCallAST *>(&expressionAST);
   auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
+  auto plusOperationAST = dynamic_cast<const PlusOperationAST *>(&expressionAST);
 
   if (literalIntegerAST) {
     PrintTo(*literalIntegerAST, os);
@@ -71,6 +80,8 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
     PrintTo(*functionCallAST, os);
   } else if (returnAST) {
     PrintTo(*returnAST, os);
+  } else if (plusOperationAST) {
+    PrintTo(*plusOperationAST, os);
   } else {
     *os << "Unknown Expression AST!!!";
   }

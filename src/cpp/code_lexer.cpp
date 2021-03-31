@@ -54,6 +54,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case operator_assign:
     os << "`=`";
     break;
+  case operator_plus:
+    os << "`+`";
+    break;
   case name:
     os << "name: [" << token.valueAsString() << "]";
     break;
@@ -143,6 +146,9 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
   case '=':
     ++(*pos);
     return Token(operator_assign);
+  case '+':
+    ++(*pos);
+    return Token(operator_plus);
   default:
     auto line = content.substr(*pos);
     auto linebreak = line.find_first_of("\r\n");

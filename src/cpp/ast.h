@@ -89,7 +89,6 @@ struct VariableReferenceAST : public ExpressionAST {
 };
 
 // Functions
-
 struct FunctionAST : public TopLevelAST {
   const std::string name;
   const std::string returnType;
@@ -143,7 +142,7 @@ struct FunctionCallAST : public ExpressionAST {
   }
 };
 
-// Constructs
+// Operations
 struct ReturnAST : public ExpressionAST {
   const std::shared_ptr<const ExpressionAST> value;
 
@@ -155,5 +154,20 @@ struct ReturnAST : public ExpressionAST {
   inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const ReturnAST *>(&o);
     return other && *(this->value) == *(other->value);
+  }
+};
+
+struct PlusOperationAST : public ExpressionAST {
+  const std::shared_ptr<const ExpressionAST> left;
+  const std::shared_ptr<const ExpressionAST> right;
+
+  PlusOperationAST(std::shared_ptr<const ExpressionAST> left, std::shared_ptr<const ExpressionAST> right)
+      : left(std::move(left)), right(std::move(right)) {}
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const PlusOperationAST *>(&o);
+    return other && *(this->left) == *(other->left) && *(this->right) == *(other->right);
   }
 };
