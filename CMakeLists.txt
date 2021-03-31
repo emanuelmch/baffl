@@ -20,8 +20,7 @@
 # SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 3.8) # CMP0069
-cmake_policy(SET CMP0069 NEW) # INTERPROCEDURAL_OPTIMIZATION
+cmake_minimum_required(VERSION 3.0)
 
 project(BAFFL VERSION 0.1 LANGUAGES CXX)
 include_directories(src/cpp)
@@ -46,7 +45,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror -Wall -Wextra -Wno-m
 
 # Source files
 add_library(baffl_lib
-        STATIC
         src/cpp/ast.cpp
         src/cpp/code_emitter.cpp
         src/cpp/code_lexer.cpp
@@ -54,14 +52,12 @@ add_library(baffl_lib
         src/cpp/ast/emission_context.cpp
         )
 target_link_libraries(baffl_lib ${llvm_libs})
-set_property(TARGET baffl_lib PROPERTY INTERPROCEDURAL_OPTIMIZATION true)
 
 add_executable(baffl
         src/cpp/main.cpp
         src/cpp/helpers/file_reader.cpp
         )
 target_link_libraries(baffl baffl_lib)
-set_property(TARGET baffl PROPERTY INTERPROCEDURAL_OPTIMIZATION true)
 
 # Testing
 enable_testing()
