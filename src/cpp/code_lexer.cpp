@@ -87,7 +87,9 @@ inline Token fromString(const std::string_view &token) {
   return Token(name, std::string(token));
 }
 
-inline std::string_view readTokenWhile(std::basic_string_view<char> view, auto predicate) {
+// TODO: Replace this template with `auto` on C++20
+template<typename P>
+inline std::string_view readTokenWhile(std::basic_string_view<char> view, P predicate) {
   assert(predicate(view.front()));
   for (size_t i = 1; i < view.size(); ++i) {
     auto nextChar = view.at(i);

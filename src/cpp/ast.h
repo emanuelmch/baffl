@@ -117,7 +117,8 @@ struct FunctionAST : public TopLevelAST {
     for (auto l = left.cbegin(), r = right.cbegin(); l != left.cend(); ++l, ++r) {
       auto leftItem = l->get();
       auto rightItem = r->get();
-      if (*leftItem != *rightItem) {
+      // TODO: Replace this with `*leftItem != *rightItem` on C++20
+      if (!leftItem->operator==(*rightItem)) {
         return false;
       }
     }
