@@ -126,7 +126,11 @@ void PrintTo(const AST &ast, std::ostream *os) {
 
   *os << "Unknown AST!!!";
 }
+
+void PrintTo(const std::shared_ptr<TopLevelAST> &ast, std::ostream *os) {
+  PrintTo(*ast, os);
 }
+} // namespace std
 
 // TODO: I'm pretty sure these aren't needed anymore
 bool operator==(const std::shared_ptr<TopLevelAST> &l, const std::shared_ptr<TopLevelAST> &r) {

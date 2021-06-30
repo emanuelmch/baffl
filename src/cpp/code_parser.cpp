@@ -22,7 +22,9 @@
 
 #include "code_parser.h"
 
-inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *tokens) {
+inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *tokens);
+
+inline static std::shared_ptr<ExpressionAST> readPrimary(std::queue<Token> *tokens) {
   std::shared_ptr<ExpressionAST> expression;
 
   if (tokens->front().id() == literal_integer) {
@@ -54,11 +56,21 @@ inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *t
     }
   }
 
-  // Binary operators
-  if (tokens->front().id() == operator_plus) {
-    tokens->pop();
-    auto right = readExpression(tokens);
-    expression = std::make_shared<PlusOperationAST>(expression, right);
+  return expression;
+}
+
+inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *tokens) {
+  std::shared_ptr<ExpressionAST> expression = readPrimary(tokens);
+
+  while(tokens->front().id() != semicolon && tokens->front().id() != bracket_close) {
+    // Binary operators
+    if (tokens->front().id() == operator_plus) {
+      tokens->pop();
+      auto right = readPrimary(tokens);
+      expression = std::make_shared<PlusOperationAST>(expression, right);
+    } else {
+      assert(!"Unexpected token");
+    }
   }
 
   return expression;

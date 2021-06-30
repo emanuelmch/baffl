@@ -30,27 +30,53 @@
 
 struct ExpressionBuilder {
 
-  inline ExpressionBuilder literal(uint64_t value) {
-    this->first = value;
-    return *this;
+  virtual ~ExpressionBuilder() = default;
+
+  // By implementing plus like this, we ensure we get the left-first precedence on multiple operations
+  std::shared_ptr<ExpressionBuilder> plus(const std::shared_ptr<ExpressionBuilder> &);
+
+  virtual std::shared_ptr<ExpressionBuilder> to_shared() = 0;
+  virtual std::shared_ptr<ExpressionAST> build() = 0;
+};
+
+struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
+  const std::shared_ptr<ExpressionBuilder> first;
+  const std::shared_ptr<ExpressionBuilder> second;
+
+  BinaryOperatorExpressionBuilder(std::shared_ptr<ExpressionBuilder> first, std::shared_ptr<ExpressionBuilder> second)
+      : first(std::move(first)), second(std::move(second)) {}
+  ~BinaryOperatorExpressionBuilder() override = default;
+
+  std::shared_ptr<ExpressionBuilder> to_shared() override {
+    return std::make_shared<BinaryOperatorExpressionBuilder>(*this);
   }
 
-  inline ExpressionBuilder plus(ExpressionBuilder left, ExpressionBuilder right) {
-    this->first = left.first;
-    this->second = right.first;
-    return *this;
-  }
-
-  inline std::shared_ptr<ExpressionAST> build() {
-    auto left = std::make_shared<LiteralIntegerAST>(first);
-    auto right = std::make_shared<LiteralIntegerAST>(second);
+  std::shared_ptr<ExpressionAST> build() override {
+    auto left = first->build();
+    auto right = second->build();
     return std::make_shared<PlusOperationAST>(left, right);
   }
-
-private:
-  uint64_t first;
-  uint64_t second;
 };
+
+std::shared_ptr<ExpressionBuilder> ExpressionBuilder::plus(const std::shared_ptr<ExpressionBuilder> &right) {
+  const std::shared_ptr<ExpressionBuilder> first = to_shared();
+  const std::shared_ptr<ExpressionBuilder> &second = right;
+  return std::make_shared<BinaryOperatorExpressionBuilder>(first, second);
+}
+
+struct LiteralExpressionBuilder : ExpressionBuilder {
+  const uint64_t value;
+
+  explicit LiteralExpressionBuilder(const uint64_t value) : value(value) {}
+  ~LiteralExpressionBuilder() override = default;
+
+  std::shared_ptr<ExpressionBuilder> to_shared() override { return std::make_shared<LiteralExpressionBuilder>(*this); }
+  std::shared_ptr<ExpressionAST> build() override { return std::make_shared<LiteralIntegerAST>(value); }
+};
+
+inline std::shared_ptr<ExpressionBuilder> literal(uint64_t value) {
+  return std::make_shared<LiteralExpressionBuilder>(value);
+}
 
 struct ASTBuilder {
   static inline ASTBuilder function(const std::string &name, const std::string &returnType) {
@@ -109,8 +135,8 @@ struct ASTBuilder {
     return *this;
   }
 
-  inline ASTBuilder returnExpression(const std::function<ExpressionBuilder(ExpressionBuilder)> &lambda) {
-    auto expressionAst = lambda({}).build();
+  inline ASTBuilder returnExpression(const std::function<std::shared_ptr<ExpressionBuilder>()> &lambda) {
+    auto expressionAst = lambda()->build();
     auto returnAst = std::make_shared<ReturnAST>(expressionAst);
     body.push_back(returnAst);
 
@@ -138,4 +164,4 @@ namespace std {
 void PrintTo(const ASTBuilder &astBuilder, std::ostream *os) {
   PrintTo(*astBuilder.build(), os);
 }
-};
+}
