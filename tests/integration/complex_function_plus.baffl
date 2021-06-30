@@ -1,0 +1,9 @@
+fun addTwo(x: i32): i32 {
+    let y = x + 2;
+    return y;
+}
+
+fun main(): i32 {
+    let x = 1;
+	return addTwo(1);
+}

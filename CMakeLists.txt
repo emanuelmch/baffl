@@ -73,6 +73,7 @@ endforeach (unit_test_file)
 
 # Integration tests
 set(integration_tests
+        tests/integration/complex_function_plus.baffl
         tests/integration/empty.baffl
         tests/integration/error_code.baffl
         tests/integration/function_arguments.baffl
