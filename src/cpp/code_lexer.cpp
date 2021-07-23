@@ -57,6 +57,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case operator_plus:
     os << "`+`";
     break;
+  case operator_minus:
+    os << "`-`";
+    break;
   case name:
     os << "name: [" << token.valueAsString() << "]";
     break;
@@ -91,7 +94,7 @@ inline Token fromString(const std::string_view &token) {
 }
 
 // TODO: Replace this template with `auto` on C++20
-template<typename P>
+template <typename P>
 inline std::string_view readTokenWhile(std::basic_string_view<char> view, P predicate) {
   assert(predicate(view.front()));
   for (size_t i = 1; i < view.size(); ++i) {
@@ -149,6 +152,9 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
   case '+':
     ++(*pos);
     return Token(operator_plus);
+  case '-':
+    ++(*pos);
+    return Token(operator_minus);
   default:
     auto line = content.substr(*pos);
     auto linebreak = line.find_first_of("\r\n");

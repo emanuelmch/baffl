@@ -26,25 +26,26 @@
 
 #include "ast.h"
 
-#include "ast.h"
-
 struct ExpressionBuilder {
 
   virtual ~ExpressionBuilder() = default;
 
   // By implementing plus like this, we ensure we get the left-first precedence on multiple operations
   std::shared_ptr<ExpressionBuilder> plus(const std::shared_ptr<ExpressionBuilder> &);
+  std::shared_ptr<ExpressionBuilder> minus(const std::shared_ptr<ExpressionBuilder> &);
 
   virtual std::shared_ptr<ExpressionBuilder> to_shared() = 0;
   virtual std::shared_ptr<ExpressionAST> build() = 0;
 };
 
 struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
+  const char _operator;
   const std::shared_ptr<ExpressionBuilder> first;
   const std::shared_ptr<ExpressionBuilder> second;
 
-  BinaryOperatorExpressionBuilder(std::shared_ptr<ExpressionBuilder> first, std::shared_ptr<ExpressionBuilder> second)
-      : first(std::move(first)), second(std::move(second)) {}
+  BinaryOperatorExpressionBuilder(const char _operator, std::shared_ptr<ExpressionBuilder> first,
+                                  std::shared_ptr<ExpressionBuilder> second)
+      : _operator(_operator), first(std::move(first)), second(std::move(second)) {}
   ~BinaryOperatorExpressionBuilder() override = default;
 
   std::shared_ptr<ExpressionBuilder> to_shared() override {
@@ -54,14 +55,28 @@ struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
   std::shared_ptr<ExpressionAST> build() override {
     auto left = first->build();
     auto right = second->build();
-    return std::make_shared<PlusOperationAST>(left, right);
+    switch(_operator) {
+    case '+':
+      return std::make_shared<PlusOperationAST>(left, right);
+    case '-':
+      return std::make_shared<MinusOperationAST>(left, right);
+    default:
+      assert(!"Unknown operator");
+      return std::make_shared<PlusOperationAST>(left, right);
+    }
   }
 };
 
 std::shared_ptr<ExpressionBuilder> ExpressionBuilder::plus(const std::shared_ptr<ExpressionBuilder> &right) {
   const std::shared_ptr<ExpressionBuilder> first = to_shared();
   const std::shared_ptr<ExpressionBuilder> &second = right;
-  return std::make_shared<BinaryOperatorExpressionBuilder>(first, second);
+  return std::make_shared<BinaryOperatorExpressionBuilder>('+', first, second);
+}
+
+std::shared_ptr<ExpressionBuilder> ExpressionBuilder::minus(const std::shared_ptr<ExpressionBuilder> &right) {
+  const std::shared_ptr<ExpressionBuilder> first = to_shared();
+  const std::shared_ptr<ExpressionBuilder> &second = right;
+  return std::make_shared<BinaryOperatorExpressionBuilder>('-', first, second);
 }
 
 struct LiteralExpressionBuilder : ExpressionBuilder {

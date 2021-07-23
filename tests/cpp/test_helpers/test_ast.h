@@ -62,6 +62,14 @@ void PrintTo(const PlusOperationAST &plusAST, std::ostream *os) {
   *os << " }";
 }
 
+void PrintTo(const MinusOperationAST &minusAST, std::ostream *os) {
+  *os << "MinusOperationAST { ";
+  PrintTo(*minusAST.left, os);
+  *os << ", ";
+  PrintTo(*minusAST.right, os);
+  *os << " }";
+}
+
 void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto literalIntegerAST = dynamic_cast<const LiteralIntegerAST *>(&expressionAST);
   auto varDecAST = dynamic_cast<const VariableDeclarationAST *>(&expressionAST);
@@ -69,6 +77,7 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto functionCallAST = dynamic_cast<const FunctionCallAST *>(&expressionAST);
   auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
   auto plusOperationAST = dynamic_cast<const PlusOperationAST *>(&expressionAST);
+  auto minusOperationAST = dynamic_cast<const MinusOperationAST *>(&expressionAST);
 
   if (literalIntegerAST) {
     PrintTo(*literalIntegerAST, os);
@@ -82,6 +91,8 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
     PrintTo(*returnAST, os);
   } else if (plusOperationAST) {
     PrintTo(*plusOperationAST, os);
+  } else if (minusOperationAST) {
+    PrintTo(*minusOperationAST, os);
   } else {
     *os << "Unknown Expression AST!!!";
   }

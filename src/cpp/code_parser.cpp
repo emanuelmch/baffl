@@ -62,15 +62,23 @@ inline static std::shared_ptr<ExpressionAST> readPrimary(std::queue<Token> *toke
 inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *tokens) {
   std::shared_ptr<ExpressionAST> expression = readPrimary(tokens);
 
-  while(tokens->front().id() != semicolon && tokens->front().id() != bracket_close) {
+  auto next = tokens->front().id();
+  while (next != semicolon && next != bracket_close) {
     // Binary operators
-    if (tokens->front().id() == operator_plus) {
+    // TODO: Stop repeating the same code for every operator
+    if (next == operator_plus) {
       tokens->pop();
       auto right = readPrimary(tokens);
       expression = std::make_shared<PlusOperationAST>(expression, right);
+    } else if (next == operator_minus) {
+      tokens->pop();
+      auto right = readPrimary(tokens);
+      expression = std::make_shared<MinusOperationAST>(expression, right);
     } else {
       assert(!"Unexpected token");
     }
+
+    next = tokens->front().id();
   }
 
   return expression;

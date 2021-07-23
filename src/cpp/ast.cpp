@@ -115,3 +115,9 @@ llvm::Value * PlusOperationAST::generate(EmissionContext &context) const {
   auto rightValue = this->right->generate(context);
   return context.builder->CreateAdd(leftValue, rightValue);
 }
+
+llvm::Value * MinusOperationAST::generate(EmissionContext &context) const {
+  auto leftValue = this->left->generate(context);
+  auto rightValue = this->right->generate(context);
+  return context.builder->CreateSub(leftValue, rightValue);
+}

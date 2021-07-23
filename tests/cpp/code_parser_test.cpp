@@ -234,6 +234,35 @@ TEST(CodeParser, BinaryOperator_Plus) {
   EXPECT_EQ(actual[0], expected);
 }
 
+TEST(CodeParser, BinaryOperator_Minus) {
+  // fun main(): i32 { return 1 - 2; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, "1");
+  input.emplace(operator_minus);
+  input.emplace(literal_integer, "2");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("main", "i32") //
+                      .returnExpression([]() {        //
+                        return literal(1)->minus(literal(2));
+                      });
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
 TEST(CodeParser, BinaryOperator_Multiple) {
   // fun main(): i32 { return 1 + 2 + 3; }
 

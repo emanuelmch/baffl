@@ -39,6 +39,7 @@ enum TokenType : uint8_t {
   comma,            // ,
   operator_assign,  // =
   operator_plus,    // +
+  operator_minus,   // -
   name,             // name
   literal_integer,  // integer
   keyword_function, // fun
