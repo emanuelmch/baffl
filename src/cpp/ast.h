@@ -177,7 +177,7 @@ struct MinusOperationAST : public ExpressionAST {
   const std::shared_ptr<const ExpressionAST> right;
 
   MinusOperationAST(std::shared_ptr<const ExpressionAST> left, std::shared_ptr<const ExpressionAST> right)
-  : left(std::move(left)), right(std::move(right)) {}
+      : left(std::move(left)), right(std::move(right)) {}
 
   llvm::Value *generate(EmissionContext &) const override;
 

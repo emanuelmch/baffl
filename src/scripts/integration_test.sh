@@ -26,5 +26,5 @@ else
   RESULT=1
 fi
 
-rm -rf $TEMP_DIR
+rm -rf "$TEMP_DIR"
 exit $RESULT

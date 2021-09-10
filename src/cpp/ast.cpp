@@ -60,9 +60,10 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   }
 
   auto functionType = llvm::FunctionType::get(i32Type, argumentTypes, false);
+  auto functionName = this->name;
   auto function =
-      llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, this->name, context.module.get());
-  context.addFunction(this->name, function);
+      llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, functionName, context.module.get());
+  context.addFunction(functionName, function);
 
   auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
   context.builder->SetInsertPoint(entryBlock);
@@ -110,13 +111,13 @@ llvm::Value *ReturnAST::generate(EmissionContext &context) const {
   return context.builder->CreateRet(returnValue);
 }
 
-llvm::Value * PlusOperationAST::generate(EmissionContext &context) const {
+llvm::Value *PlusOperationAST::generate(EmissionContext &context) const {
   auto leftValue = this->left->generate(context);
   auto rightValue = this->right->generate(context);
   return context.builder->CreateAdd(leftValue, rightValue);
 }
 
-llvm::Value * MinusOperationAST::generate(EmissionContext &context) const {
+llvm::Value *MinusOperationAST::generate(EmissionContext &context) const {
   auto leftValue = this->left->generate(context);
   auto rightValue = this->right->generate(context);
   return context.builder->CreateSub(leftValue, rightValue);

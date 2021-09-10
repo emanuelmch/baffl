@@ -55,7 +55,7 @@ struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
   std::shared_ptr<ExpressionAST> build() override {
     auto left = first->build();
     auto right = second->build();
-    switch(_operator) {
+    switch (_operator) {
     case '+':
       return std::make_shared<PlusOperationAST>(left, right);
     case '-':

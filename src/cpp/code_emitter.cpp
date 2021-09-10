@@ -68,11 +68,11 @@ inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Mo
 
   module->setDataLayout(targetMachine->createDataLayout());
 
-  std::error_code EC;
-  llvm::raw_fd_ostream dest(output, EC, llvm::sys::fs::OF_None);
+  std::error_code errorCode;
+  llvm::raw_fd_ostream dest(output, errorCode, llvm::sys::fs::OF_None);
 
-  if (EC) {
-    std::cout << "Could not open file: " << EC.message();
+  if (errorCode) {
+    std::cout << "Could not open file: " << errorCode.message();
     return 1;
   }
 
