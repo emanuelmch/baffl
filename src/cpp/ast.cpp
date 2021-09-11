@@ -55,6 +55,7 @@ llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto scopeGuard = context.pushScope();
 
+  const auto boolType = llvm::Type::getInt1Ty(*context.llvmContext);
   const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
 
   std::vector<llvm::Type *> argumentTypes;
@@ -64,14 +65,19 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
     argumentTypes.emplace_back(i32Type);
   }
 
+  // TODO: Move the void main magic elsewhere? Maybe?
+  if (this->name == "main") {
+    assert(this->returnTypeName == "void" || this->returnTypeName == "i32");
+  }
+
   llvm::Type *returnType;
-  if (this->returnTypeName == "void") {
-    returnType = llvm::Type::getVoidTy(*context.llvmContext);
-  } else if (this->returnTypeName == "bool") {
-    returnType = llvm::Type::getInt1Ty(*context.llvmContext);
-  } else {
-    assert(this->returnTypeName == "i32");
+  if (this->name == "main" || this->returnTypeName == "i32") {
     returnType = i32Type;
+  } else if (this->returnTypeName == "bool") {
+    returnType = boolType;
+  } else {
+    assert(this->returnTypeName == "void");
+    returnType = llvm::Type::getVoidTy(*context.llvmContext);
   }
 
   auto functionType = llvm::FunctionType::get(returnType, argumentTypes, false);
@@ -107,7 +113,13 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   }
 
   if (this->returnTypeName == "void") {
-    context.builder->CreateRetVoid();
+    if (this->name == "main") {
+      auto integerAst = std::make_shared<LiteralIntegerAST>(0);
+      auto returnAst = std::make_shared<ReturnAST>(integerAst);
+      returnAst->generate(context);
+    } else {
+      context.builder->CreateRetVoid();
+    }
   }
 
   context.runPasses(function);
