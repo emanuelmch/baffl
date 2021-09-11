@@ -91,13 +91,13 @@ struct VariableReferenceAST : public ExpressionAST {
 // Functions
 struct FunctionAST : public TopLevelAST {
   const std::string name;
-  const std::string returnType;
+  const std::string returnTypeName;
   const std::vector<std::tuple<std::string, std::string>> arguments;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
 
-  FunctionAST(std::string name, std::string returnType, std::vector<std::tuple<std::string, std::string>> arguments,
+  FunctionAST(std::string name, std::string returnTypeName, std::vector<std::tuple<std::string, std::string>> arguments,
               std::vector<std::shared_ptr<const ExpressionAST>> body)
-      : name(std::move(name)), returnType(std::move(returnType)), arguments(std::move(arguments)),
+      : name(std::move(name)), returnTypeName(std::move(returnTypeName)), arguments(std::move(arguments)),
         body(std::move(body)) {}
   ~FunctionAST() override = default;
 
@@ -105,7 +105,7 @@ struct FunctionAST : public TopLevelAST {
 
   inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionAST *>(&o);
-    return other && this->name == other->name && this->returnType == other->returnType &&
+    return other && this->name == other->name && this->returnTypeName == other->returnTypeName &&
            compareBodies(this->body, other->body);
   }
 

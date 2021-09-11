@@ -8,7 +8,7 @@ TEST_FILE=$2
 TEST_OBJECT=${TEMP_DIR}/object.o
 TEST_EXECUTABLE=${TEMP_DIR}/executable
 
-TEST_EXPECTED_RESULT=$(cat "${TEST_FILE}.result")
+
 
 # Compile the test file
 $COMPILER "${TEST_FILE}" -vo "${TEST_OBJECT}" || exit 1
@@ -18,13 +18,18 @@ clang "${TEST_OBJECT}" -o "${TEST_EXECUTABLE}"
 $TEST_EXECUTABLE
 TEST_ACTUAL_RESULT=$?
 
-if [ "$TEST_ACTUAL_RESULT" -eq "$TEST_EXPECTED_RESULT" ] ; then
-  echo "Success: $TEST_ACTUAL_RESULT"
-  RESULT=0
-else
-  echo "Failed: Expected $TEST_EXPECTED_RESULT, got $TEST_ACTUAL_RESULT"
-  RESULT=1
-fi
+if [ -f "${TEST_FILE}.result" ]; then
+  TEST_EXPECTED_RESULT=$(cat "${TEST_FILE}.result")
+
+  if [ "$TEST_ACTUAL_RESULT" -eq "$TEST_EXPECTED_RESULT" ] ; then
+    echo "Success: $TEST_ACTUAL_RESULT"
+    RESULT=0
+  else
+    echo "Failed: Expected $TEST_EXPECTED_RESULT, got $TEST_ACTUAL_RESULT"
+    RESULT=1
+  fi
+
+fi # "${TEST_FILE}.result"
 
 rm -rf "$TEMP_DIR"
 exit $RESULT

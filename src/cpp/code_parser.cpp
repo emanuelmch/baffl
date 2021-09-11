@@ -172,12 +172,17 @@ inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
   assert(tokens->front().id() == bracket_close);
   tokens->pop();
 
-  assert(tokens->front().id() == colon);
-  tokens->pop();
+  std::string returnType;
+  if (tokens->front().id() == curly_open) {
+    returnType = "void";
+  } else {
+    assert(tokens->front().id() == colon);
+    tokens->pop();
 
-  assert(tokens->front().id() == TokenType::name);
-  auto returnType = tokens->front().valueAsString();
-  tokens->pop();
+    assert(tokens->front().id() == TokenType::name);
+    returnType = tokens->front().valueAsString();
+    tokens->pop();
+  }
 
   auto body = readBody(tokens);
   return std::make_shared<FunctionAST>(name, returnType, arguments, body);

@@ -51,7 +51,9 @@ llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto scopeGuard = context.pushScope();
 
-  auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
+  const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
+  const auto voidType = llvm::Type::getVoidTy(*context.llvmContext);
+
   std::vector<llvm::Type *> argumentTypes;
   for (auto argument : arguments) {
     auto argumentType = std::get<1>(argument);
@@ -59,7 +61,14 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
     argumentTypes.emplace_back(i32Type);
   }
 
-  auto functionType = llvm::FunctionType::get(i32Type, argumentTypes, false);
+  llvm::Type *returnType;
+  if (this->returnTypeName == "void") {
+    returnType = voidType;
+  } else {
+    returnType = i32Type;
+  }
+
+  auto functionType = llvm::FunctionType::get(returnType, argumentTypes, false);
   auto functionName = this->name;
   auto function =
       llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, functionName, context.module.get());
@@ -89,6 +98,10 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
 
   for (const auto &expression : body) {
     expression->generate(context);
+  }
+
+  if (this->returnTypeName == "void") {
+    context.builder->CreateRetVoid();
   }
 
   context.runPasses(function);
