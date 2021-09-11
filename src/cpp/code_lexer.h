@@ -42,6 +42,8 @@ enum TokenType : uint8_t {
   operator_minus,   // -
   name,             // name
   literal_integer,  // integer
+  keyword_true,     // true
+  keyword_false,    // false
   keyword_function, // fun
   keyword_let,      // let
   keyword_return,   // return

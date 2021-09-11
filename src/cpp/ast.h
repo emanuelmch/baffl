@@ -45,6 +45,19 @@ struct ExpressionAST : public AST {
 };
 
 // Literals
+struct LiteralBooleanAST : public ExpressionAST {
+  const bool value;
+
+  explicit LiteralBooleanAST(bool value) : value(value) {}
+  ~LiteralBooleanAST() override = default;
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const LiteralBooleanAST *>(&o);
+    return other && this->value == other->value;
+  }
+};
 struct LiteralIntegerAST : public ExpressionAST {
   const uint64_t value;
 

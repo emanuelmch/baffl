@@ -27,11 +27,15 @@ inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *t
 inline static std::shared_ptr<ExpressionAST> readPrimary(std::queue<Token> *tokens) {
   std::shared_ptr<ExpressionAST> expression;
 
-  if (tokens->front().id() == literal_integer) {
-    expression = std::make_shared<LiteralIntegerAST>(tokens->front().valueAsInt());
+  const auto next = tokens->front();
+  if (next.id() == literal_integer) {
+    expression = std::make_shared<LiteralIntegerAST>(next.valueAsInt());
+    tokens->pop();
+  } else if (next.id() == keyword_true || next.id() == keyword_false) {
+    expression = std::make_shared<LiteralBooleanAST>(next.id() == keyword_true);
     tokens->pop();
   } else {
-    assert(tokens->front().id() == name);
+    assert(next.id() == name);
     // We can't tell yet whether it's a variable or a function call
     auto thingName = tokens->front().valueAsString();
     tokens->pop();
@@ -105,6 +109,10 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     statement = std::make_shared<VariableDeclarationAST>(varName, initialValue);
     break;
   }
+  case name:
+    statement = readExpression(tokens);
+    assert(dynamic_cast<const FunctionCallAST *>(statement.get()));
+    break;
   default:
     assert(!"Statement starting with invalid token!");
   }

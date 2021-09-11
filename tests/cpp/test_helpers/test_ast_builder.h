@@ -116,7 +116,15 @@ struct ASTBuilder {
     return *this;
   }
 
-  inline ASTBuilder returnLiteral(uint64_t value) {
+  inline ASTBuilder returnBoolLiteral(bool value) {
+    auto literalAst = std::make_shared<LiteralBooleanAST>(value);
+    auto returnAst = std::make_shared<ReturnAST>(literalAst);
+    body.push_back(returnAst);
+
+    return *this;
+  }
+
+  inline ASTBuilder returnIntLiteral(uint64_t value) {
     auto literalAst = std::make_shared<LiteralIntegerAST>(value);
     auto returnAst = std::make_shared<ReturnAST>(literalAst);
     body.push_back(returnAst);

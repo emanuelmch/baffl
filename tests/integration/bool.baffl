@@ -1,0 +1,12 @@
+fun returnsTrue(): bool {
+    return true;
+}
+
+fun returnFalse(): bool {
+    return false;
+}
+
+fun main() {
+    returnsTrue();
+    returnFalse();
+}

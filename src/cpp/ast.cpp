@@ -25,6 +25,10 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRBuilder.h>
 
+llvm::Value *LiteralBooleanAST::generate(EmissionContext &context) const {
+  return llvm::ConstantInt::getBool(*context.llvmContext, value);
+}
+
 llvm::Value *LiteralIntegerAST::generate(EmissionContext &context) const {
   return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, this->value));
 }
@@ -52,7 +56,6 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto scopeGuard = context.pushScope();
 
   const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
-  const auto voidType = llvm::Type::getVoidTy(*context.llvmContext);
 
   std::vector<llvm::Type *> argumentTypes;
   for (auto argument : arguments) {
@@ -63,8 +66,11 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
 
   llvm::Type *returnType;
   if (this->returnTypeName == "void") {
-    returnType = voidType;
+    returnType = llvm::Type::getVoidTy(*context.llvmContext);
+  } else if (this->returnTypeName == "bool") {
+    returnType = llvm::Type::getInt1Ty(*context.llvmContext);
   } else {
+    assert(this->returnTypeName == "i32");
     returnType = i32Type;
   }
 

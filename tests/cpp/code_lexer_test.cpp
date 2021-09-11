@@ -240,3 +240,41 @@ TEST(CodeLexer, BinaryOperator_Multiple) {
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
+
+TEST(CodeLexer, BoolFunction_True) {
+  auto input = "fun returnsTrue(): bool { return true; }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "returnsTrue");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "bool");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(keyword_true);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
+TEST(CodeLexer, BoolFunction_False) {
+  auto input = "fun returnsFalse(): bool { return false; }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "returnsFalse");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "bool");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(keyword_false);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}

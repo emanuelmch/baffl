@@ -66,6 +66,12 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case literal_integer:
     os << "literal: int: [" << token.valueAsString() << "]";
     break;
+  case keyword_true:
+    os << "keyword: true";
+    break;
+  case keyword_false:
+    os << "keyword: false";
+    break;
   case keyword_function:
     os << "keyword: function";
     break;
@@ -88,6 +94,10 @@ inline Token fromString(const std::string_view &token) {
     return Token(keyword_let);
   } else if (token == "return") {
     return Token(keyword_return);
+  } else if (token == "true") {
+    return Token(keyword_true);
+  } else if (token == "false") {
+    return Token(keyword_false);
   }
 
   return Token(name, std::string(token));
