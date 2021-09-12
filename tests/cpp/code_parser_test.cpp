@@ -343,3 +343,26 @@ TEST(CodeParser, BoolFunction_False) {
   ASSERT_EQ(actual.size(), 1);
   EXPECT_EQ(actual[0], expected);
 }
+
+TEST(CodeParser, BoolParameter) {
+  // fun randomFunction(x: bool) {}
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "randomFunction");
+  input.emplace(bracket_open);
+  input.emplace(name, "x");
+  input.emplace(colon);
+  input.emplace(name, "bool");
+  input.emplace(bracket_close);
+  input.emplace(curly_open);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("randomFunction", "void") //
+                      .addArgument("x", "bool");
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}

@@ -61,8 +61,12 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   std::vector<llvm::Type *> argumentTypes;
   for (auto argument : arguments) {
     auto argumentType = std::get<1>(argument);
-    assert(argumentType == "i32");
-    argumentTypes.emplace_back(i32Type);
+    if (argumentType == "i32") {
+      argumentTypes.emplace_back(i32Type);
+    } else {
+      assert(argumentType == "bool");
+      argumentTypes.emplace_back(boolType);
+    }
   }
 
   // TODO: Move the void main magic elsewhere? Maybe?

@@ -1,0 +1,7 @@
+fun randomFunction(x: bool): bool {
+    return true;
+}
+
+fun main() {
+    randomFunction(false);
+}

@@ -278,3 +278,20 @@ TEST(CodeLexer, BoolFunction_False) {
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
+
+TEST(CodeLexer, BoolParameter) {
+  auto input = "fun randomFunction(x: bool) {}";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "randomFunction");
+  expected.emplace(bracket_open);
+  expected.emplace(name, "x");
+  expected.emplace(colon);
+  expected.emplace(name, "bool");
+  expected.emplace(bracket_close);
+  expected.emplace(curly_open);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
