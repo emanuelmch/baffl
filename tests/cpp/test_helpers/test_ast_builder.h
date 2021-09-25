@@ -30,20 +30,21 @@ struct ExpressionBuilder {
 
   virtual ~ExpressionBuilder() = default;
 
-  // By implementing plus like this, we ensure we get the left-first precedence on multiple operations
+  // By implementing binary operators like this, we ensure we get the left-first precedence on multiple operations
   std::shared_ptr<ExpressionBuilder> plus(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> minus(const std::shared_ptr<ExpressionBuilder> &);
+  std::shared_ptr<ExpressionBuilder> equals(const std::shared_ptr<ExpressionBuilder> &);
 
   virtual std::shared_ptr<ExpressionBuilder> to_shared() = 0;
   virtual std::shared_ptr<ExpressionAST> build() = 0;
 };
 
 struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
-  const char _operator;
+  const TokenType _operator;
   const std::shared_ptr<ExpressionBuilder> first;
   const std::shared_ptr<ExpressionBuilder> second;
 
-  BinaryOperatorExpressionBuilder(const char _operator, std::shared_ptr<ExpressionBuilder> first,
+  BinaryOperatorExpressionBuilder(const TokenType _operator, std::shared_ptr<ExpressionBuilder> first,
                                   std::shared_ptr<ExpressionBuilder> second)
       : _operator(_operator), first(std::move(first)), second(std::move(second)) {}
   ~BinaryOperatorExpressionBuilder() override = default;
@@ -56,10 +57,12 @@ struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
     auto left = first->build();
     auto right = second->build();
     switch (_operator) {
-    case '+':
+    case operator_plus:
       return std::make_shared<PlusOperationAST>(left, right);
-    case '-':
+    case operator_minus:
       return std::make_shared<MinusOperationAST>(left, right);
+    case operator_equals:
+      return std::make_shared<EqualsOperationAST>(left, right);
     default:
       assert(!"Unknown operator");
       return std::make_shared<PlusOperationAST>(left, right);
@@ -67,30 +70,64 @@ struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
   }
 };
 
-std::shared_ptr<ExpressionBuilder> ExpressionBuilder::plus(const std::shared_ptr<ExpressionBuilder> &right) {
+inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::plus(const std::shared_ptr<ExpressionBuilder> &right) {
   const std::shared_ptr<ExpressionBuilder> first = to_shared();
   const std::shared_ptr<ExpressionBuilder> &second = right;
-  return std::make_shared<BinaryOperatorExpressionBuilder>('+', first, second);
+  return std::make_shared<BinaryOperatorExpressionBuilder>(operator_plus, first, second);
 }
 
-std::shared_ptr<ExpressionBuilder> ExpressionBuilder::minus(const std::shared_ptr<ExpressionBuilder> &right) {
+inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::minus(const std::shared_ptr<ExpressionBuilder> &right) {
   const std::shared_ptr<ExpressionBuilder> first = to_shared();
   const std::shared_ptr<ExpressionBuilder> &second = right;
-  return std::make_shared<BinaryOperatorExpressionBuilder>('-', first, second);
+  return std::make_shared<BinaryOperatorExpressionBuilder>(operator_minus, first, second);
 }
 
-struct LiteralExpressionBuilder : ExpressionBuilder {
-  const uint64_t value;
+inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::equals(const std::shared_ptr<ExpressionBuilder> &right) {
+  const std::shared_ptr<ExpressionBuilder> first = to_shared();
+  const std::shared_ptr<ExpressionBuilder> &second = right;
+  return std::make_shared<BinaryOperatorExpressionBuilder>(operator_equals, first, second);
+}
 
-  explicit LiteralExpressionBuilder(const uint64_t value) : value(value) {}
-  ~LiteralExpressionBuilder() override = default;
+struct BoolLiteralExpressionBuilder : ExpressionBuilder {
+  const bool value;
 
-  std::shared_ptr<ExpressionBuilder> to_shared() override { return std::make_shared<LiteralExpressionBuilder>(*this); }
-  std::shared_ptr<ExpressionAST> build() override { return std::make_shared<LiteralIntegerAST>(value); }
+  explicit BoolLiteralExpressionBuilder(bool value) : value(value) {}
+  ~BoolLiteralExpressionBuilder() override = default;
+
+  inline std::shared_ptr<ExpressionBuilder> to_shared() override { return std::make_shared<BoolLiteralExpressionBuilder>(*this); }
+  inline std::shared_ptr<ExpressionAST> build() override { return std::make_shared<LiteralBooleanAST>(value); }
 };
 
-inline std::shared_ptr<ExpressionBuilder> literal(uint64_t value) {
-  return std::make_shared<LiteralExpressionBuilder>(value);
+struct IntLiteralExpressionBuilder : ExpressionBuilder {
+  const uint64_t value;
+
+  explicit IntLiteralExpressionBuilder(uint64_t value) : value(value) {}
+  ~IntLiteralExpressionBuilder() override = default;
+
+  inline std::shared_ptr<ExpressionBuilder> to_shared() override { return std::make_shared<IntLiteralExpressionBuilder>(*this); }
+  inline std::shared_ptr<ExpressionAST> build() override { return std::make_shared<LiteralIntegerAST>(value); }
+};
+
+struct VariableExpressionBuilder : ExpressionBuilder {
+  const std::string name;
+
+  explicit VariableExpressionBuilder(std::string name) : name(std::move(name)) {}
+  ~VariableExpressionBuilder() override = default;
+
+  inline std::shared_ptr<ExpressionBuilder> to_shared() override { return std::make_shared<VariableExpressionBuilder>(*this); }
+  inline std::shared_ptr<ExpressionAST> build() override { return std::make_shared<VariableReferenceAST>(name); }
+};
+
+inline std::shared_ptr<ExpressionBuilder> boolLiteral(bool value) {
+  return std::make_shared<BoolLiteralExpressionBuilder>(value);
+}
+
+inline std::shared_ptr<ExpressionBuilder> intLiteral(uint64_t value) {
+  return std::make_shared<IntLiteralExpressionBuilder>(value);
+}
+
+inline std::shared_ptr<ExpressionBuilder> variable(const std::string &name) {
+  return std::make_shared<VariableExpressionBuilder>(name);
 }
 
 struct ASTBuilder {

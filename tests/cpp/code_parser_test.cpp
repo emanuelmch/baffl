@@ -225,7 +225,7 @@ TEST(CodeParser, BinaryOperator_Plus) {
 
   auto expected = ASTBuilder::function("main", "i32") //
                       .returnExpression([]() {        //
-                        return literal(1)->plus(literal(2));
+                        return intLiteral(1)->plus(intLiteral(2));
                       });
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
@@ -254,7 +254,7 @@ TEST(CodeParser, BinaryOperator_Minus) {
 
   auto expected = ASTBuilder::function("main", "i32") //
                       .returnExpression([]() {        //
-                        return literal(1)->minus(literal(2));
+                        return intLiteral(1)->minus(intLiteral(2));
                       });
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
@@ -285,9 +285,9 @@ TEST(CodeParser, BinaryOperator_Multiple) {
 
   auto expected = ASTBuilder::function("main", "i32") //
                       .returnExpression([=]() {       //
-                        return literal(1)
-                            ->plus(literal(2))  //
-                            ->plus(literal(3)); //
+                        return intLiteral(1)
+                            ->plus(intLiteral(2))  //
+                            ->plus(intLiteral(3)); //
                       });
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
@@ -360,6 +360,39 @@ TEST(CodeParser, BoolParameter) {
 
   auto expected = ASTBuilder::function("randomFunction", "void") //
                       .addArgument("x", "bool");
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, OperatorEquals) {
+  // fun function(x: bool): bool { return x == true; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "function");
+  input.emplace(bracket_open);
+  input.emplace(name, "x");
+  input.emplace(colon);
+  input.emplace(name, "bool");
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "bool");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(name, "x");
+  input.emplace(operator_equals);
+  input.emplace(keyword_true);
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("function", "bool") //
+                      .addArgument("x", "bool")
+                      .returnExpression([=]() {                           //
+                        return variable("x")->equals(boolLiteral(true)); //
+                      });
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 

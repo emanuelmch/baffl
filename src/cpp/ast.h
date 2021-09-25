@@ -170,6 +170,7 @@ struct ReturnAST : public ExpressionAST {
   }
 };
 
+// TODO: Should we replace all these with a "BinaryOperationAST"?
 struct PlusOperationAST : public ExpressionAST {
   const std::shared_ptr<const ExpressionAST> left;
   const std::shared_ptr<const ExpressionAST> right;
@@ -196,6 +197,21 @@ struct MinusOperationAST : public ExpressionAST {
 
   inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const MinusOperationAST *>(&o);
+    return other && *(this->left) == *(other->left) && *(this->right) == *(other->right);
+  }
+};
+
+struct EqualsOperationAST : public ExpressionAST {
+  const std::shared_ptr<const ExpressionAST> left;
+  const std::shared_ptr<const ExpressionAST> right;
+
+  EqualsOperationAST(std::shared_ptr<const ExpressionAST> left, std::shared_ptr<const ExpressionAST> right)
+      : left(std::move(left)), right(std::move(right)) {}
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const EqualsOperationAST *>(&o);
     return other && *(this->left) == *(other->left) && *(this->right) == *(other->right);
   }
 };

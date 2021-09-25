@@ -60,6 +60,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case operator_minus:
     os << "`-`";
     break;
+  case operator_equals:
+    os << "`==`";
+    break;
   case name:
     os << "name: [" << token.valueAsString() << "]";
     break;
@@ -124,6 +127,8 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
   if (*pos == content.size()) return Token(noop);
 
   auto currentChar = content[*pos];
+  auto nextChar = content[*pos + 1];
+
   if (std::isalpha(currentChar)) {
     auto token = readTokenWhile(content.substr(*pos), [](auto it) { return std::isalnum(it); });
     (*pos) += token.size();
@@ -158,7 +163,12 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
     return Token(semicolon);
   case '=':
     ++(*pos);
-    return Token(operator_assign);
+    if (nextChar == '=') {
+      ++(*pos);
+      return Token(operator_equals);
+    } else {
+      return Token(operator_assign);
+    }
   case '+':
     ++(*pos);
     return Token(operator_plus);

@@ -1,7 +1,14 @@
-fun randomFunction(x: bool): bool {
-    return true;
+fun getNumber(x: bool): i32 {
+    if (x) {
+        return 2;
+    }
+    if (y == false) {
+        return 4;
+    }
 }
 
 fun main() {
-    randomFunction(false);
+    let x = getNumber(false);
+    let y = getNumber(true);
+    return x + y;
 }

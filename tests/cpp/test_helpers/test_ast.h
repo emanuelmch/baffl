@@ -30,6 +30,10 @@ namespace std {
 
 void PrintTo(const ExpressionAST &expressionAST, std::ostream *os);
 
+void PrintTo(const LiteralBooleanAST &literalAST, std::ostream *os) {
+  *os << "LiteralBooleanAST {" << literalAST.value << "}";
+}
+
 void PrintTo(const LiteralIntegerAST &literalAST, std::ostream *os) {
   *os << "LiteralIntegerAST {" << literalAST.value << "}";
 }
@@ -70,7 +74,16 @@ void PrintTo(const MinusOperationAST &minusAST, std::ostream *os) {
   *os << " }";
 }
 
+void PrintTo(const EqualsOperationAST &equalsAST, std::ostream *os) {
+  *os << "EqualsOperationAST { ";
+  PrintTo(*equalsAST.left, os);
+  *os << ", ";
+  PrintTo(*equalsAST.right, os);
+  *os << " }";
+}
+
 void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
+  auto literalBooleanAST = dynamic_cast<const LiteralBooleanAST *>(&expressionAST);
   auto literalIntegerAST = dynamic_cast<const LiteralIntegerAST *>(&expressionAST);
   auto varDecAST = dynamic_cast<const VariableDeclarationAST *>(&expressionAST);
   auto varRefAST = dynamic_cast<const VariableReferenceAST *>(&expressionAST);
@@ -78,8 +91,11 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
   auto plusOperationAST = dynamic_cast<const PlusOperationAST *>(&expressionAST);
   auto minusOperationAST = dynamic_cast<const MinusOperationAST *>(&expressionAST);
+  auto equalsOperationAST = dynamic_cast<const EqualsOperationAST *>(&expressionAST);
 
-  if (literalIntegerAST) {
+  if (literalBooleanAST) {
+    PrintTo(*literalBooleanAST, os);
+  } else if (literalIntegerAST) {
     PrintTo(*literalIntegerAST, os);
   } else if (varDecAST) {
     PrintTo(*varDecAST, os);
@@ -93,6 +109,8 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
     PrintTo(*plusOperationAST, os);
   } else if (minusOperationAST) {
     PrintTo(*minusOperationAST, os);
+  } else if (equalsOperationAST) {
+    PrintTo(*equalsOperationAST, os);
   } else {
     *os << "Unknown Expression AST!!!";
   }

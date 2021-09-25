@@ -295,3 +295,27 @@ TEST(CodeLexer, BoolParameter) {
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
+
+TEST(CodeLexer, OperatorEquals) {
+  auto input = "fun function(x: bool): bool { return x == true; }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "function");
+  expected.emplace(bracket_open);
+  expected.emplace(name, "x");
+  expected.emplace(colon);
+  expected.emplace(name, "bool");
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "bool");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(name, "x");
+  expected.emplace(operator_equals);
+  expected.emplace(keyword_true);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}

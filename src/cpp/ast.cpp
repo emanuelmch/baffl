@@ -157,3 +157,9 @@ llvm::Value *MinusOperationAST::generate(EmissionContext &context) const {
   auto rightValue = this->right->generate(context);
   return context.builder->CreateSub(leftValue, rightValue);
 }
+
+llvm::Value *EqualsOperationAST::generate(EmissionContext &context) const {
+  auto leftValue = this->left->generate(context);
+  auto rightValue = this->right->generate(context);
+  return context.builder->CreateICmpEQ(leftValue, rightValue);
+}
