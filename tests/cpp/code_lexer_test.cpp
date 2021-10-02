@@ -319,3 +319,64 @@ TEST(CodeLexer, OperatorEquals) {
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
+
+TEST(CodeLexer, IfWithBoolean) {
+  auto input = "fun function(x: bool): i32 { if (x) { return 1; } return 0; }";
+
+    std::queue<Token> expected;
+    expected.emplace(keyword_function);
+    expected.emplace(name, "function");
+    expected.emplace(bracket_open);
+    expected.emplace(name, "x");
+    expected.emplace(colon);
+    expected.emplace(name, "bool");
+    expected.emplace(bracket_close);
+    expected.emplace(colon);
+    expected.emplace(name, "i32");
+    expected.emplace(curly_open);
+    expected.emplace(keyword_if);
+    expected.emplace(bracket_open);
+    expected.emplace(name, "x");
+    expected.emplace(bracket_close);
+    expected.emplace(curly_open);
+    expected.emplace(keyword_return);
+    expected.emplace(literal_integer, 1);
+    expected.emplace(semicolon);
+    expected.emplace(curly_close);
+    expected.emplace(keyword_return);
+    expected.emplace(literal_integer, 0);
+    expected.emplace(semicolon);
+    expected.emplace(curly_close);
+
+    EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
+TEST(CodeLexer, IfWithExpression) {
+  auto input = "fun function(): i32 { if (1 == 1) { return 1; } return 0; }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "function");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_if);
+  expected.emplace(bracket_open);
+  expected.emplace(literal_integer, 1);
+  expected.emplace(operator_equals);
+  expected.emplace(literal_integer, 1);
+  expected.emplace(bracket_close);
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(literal_integer, 1);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+  expected.emplace(keyword_return);
+  expected.emplace(literal_integer, 0);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}

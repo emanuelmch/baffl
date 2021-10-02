@@ -131,6 +131,10 @@ inline std::shared_ptr<ExpressionBuilder> variable(const std::string &name) {
 }
 
 struct ASTBuilder {
+  static inline ASTBuilder block() {
+    return ASTBuilder{};
+  }
+
   static inline ASTBuilder function(const std::string &name, const std::string &returnType) {
     ASTBuilder builder;
     builder.functionName = name;
@@ -141,6 +145,21 @@ struct ASTBuilder {
   inline ASTBuilder addArgument(const std::string &name, const std::string &type) {
     functionArguments.emplace_back(name, type);
 
+    return *this;
+  }
+
+  inline ASTBuilder ifExpression(const std::function<std::shared_ptr<ExpressionBuilder>()> &condition,
+                                 const std::function<void(ASTBuilder*)> &positiveBranch) {
+    auto conditionAst = condition()->build();
+
+    // TODO: Maybe we
+    auto innerBody = ASTBuilder::block();
+    positiveBranch(&innerBody);
+
+    auto ifAst = std::make_shared<IfAST>(conditionAst, innerBody.body);
+    body.push_back(ifAst);
+
+    // FIXME: Implement this
     return *this;
   }
 

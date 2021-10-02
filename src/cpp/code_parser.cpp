@@ -100,6 +100,8 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     tokens->pop();
     auto returnValue = readExpression(tokens);
     statement = std::make_shared<ReturnAST>(returnValue);
+    assert(tokens->front().id() == semicolon);
+    tokens->pop();
     break;
   }
   case keyword_let: {
@@ -111,18 +113,39 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     tokens->pop();
     auto initialValue = readExpression(tokens);
     statement = std::make_shared<VariableDeclarationAST>(varName, initialValue);
+    assert(tokens->front().id() == semicolon);
+    tokens->pop();
+    break;
+  }
+  case keyword_if: {
+    tokens->pop();
+    assert(tokens->front().id() == bracket_open);
+    tokens->pop();
+    auto condition = readExpression(tokens);
+    assert(tokens->front().id() == bracket_close);
+    tokens->pop();
+    assert(tokens->front().id() == curly_open);
+    tokens->pop();
+    std::vector<std::shared_ptr<const ExpressionAST>> positiveBranch;
+    while (tokens->front().id() != curly_close) {
+      auto expression = readStatement(tokens);
+      positiveBranch.push_back(expression);
+    }
+    assert(tokens->front().id() == curly_close);
+    tokens->pop();
+
+    statement = std::make_shared<IfAST>(condition, positiveBranch);
     break;
   }
   case name:
     statement = readExpression(tokens);
     assert(dynamic_cast<const FunctionCallAST *>(statement.get()));
+    assert(tokens->front().id() == semicolon);
+    tokens->pop();
     break;
   default:
     assert(!"Statement starting with invalid token!");
   }
-
-  assert(tokens->front().id() == semicolon);
-  tokens->pop();
 
   return statement;
 }

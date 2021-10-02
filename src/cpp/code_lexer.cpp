@@ -84,6 +84,10 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case keyword_return:
     os << "keyword: return";
     break;
+
+  case keyword_if:
+    os << "keyword: if";
+    break;
   }
   return os;
 }
@@ -92,18 +96,20 @@ inline Token fromString(const std::string_view &token) {
   assert(!token.empty());
 
   if (token == "fun") {
-    return Token(keyword_function);
+    return Token{keyword_function};
   } else if (token == "let") {
-    return Token(keyword_let);
+    return Token{keyword_let};
   } else if (token == "return") {
-    return Token(keyword_return);
+    return Token{keyword_return};
+  } else if (token == "if") {
+    return Token{keyword_if};
   } else if (token == "true") {
-    return Token(keyword_true);
+    return Token{keyword_true};
   } else if (token == "false") {
-    return Token(keyword_false);
+    return Token{keyword_false};
   }
 
-  return Token(name, std::string(token));
+  return {name, std::string(token)};
 }
 
 // TODO: Replace this template with `auto` on C++20

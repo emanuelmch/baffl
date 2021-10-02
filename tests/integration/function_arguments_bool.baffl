@@ -2,12 +2,13 @@ fun getNumber(x: bool): i32 {
     if (x) {
         return 2;
     }
-    if (y == false) {
+    if (x == false) {
         return 4;
     }
+    return 8;
 }
 
-fun main() {
+fun main(): i32 {
     let x = getNumber(false);
     let y = getNumber(true);
     return x + y;

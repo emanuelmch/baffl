@@ -44,6 +44,24 @@ struct ExpressionAST : public AST {
   virtual ~ExpressionAST() = default;
 };
 
+// Generic Helpers
+inline static bool compareBodies(const std::vector<std::shared_ptr<const ExpressionAST>> &left,
+                                 const std::vector<std::shared_ptr<const ExpressionAST>> &right) {
+  if (left.size() != right.size()) return false;
+
+  for (auto l = left.cbegin(), r = right.cbegin(); l != left.cend(); ++l, ++r) {
+    auto leftItem = l->get();
+    auto rightItem = r->get();
+
+    // TODO: Replace this with `*leftItem != *rightItem` on C++20
+    if (!leftItem || !leftItem->operator==(*rightItem)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Literals
 struct LiteralBooleanAST : public ExpressionAST {
   const bool value;
@@ -121,22 +139,6 @@ struct FunctionAST : public TopLevelAST {
     return other && this->name == other->name && this->returnTypeName == other->returnTypeName &&
            compareBodies(this->body, other->body);
   }
-
-  inline static bool compareBodies(const std::vector<std::shared_ptr<const ExpressionAST>> &left,
-                                   const std::vector<std::shared_ptr<const ExpressionAST>> &right) {
-    if (left.size() != right.size()) return false;
-
-    for (auto l = left.cbegin(), r = right.cbegin(); l != left.cend(); ++l, ++r) {
-      auto leftItem = l->get();
-      auto rightItem = r->get();
-      // TODO: Replace this with `*leftItem != *rightItem` on C++20
-      if (!leftItem->operator==(*rightItem)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
 };
 
 struct FunctionCallAST : public ExpressionAST {
@@ -152,6 +154,22 @@ struct FunctionCallAST : public ExpressionAST {
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionCallAST *>(&o);
     return other && this->functionName == other->functionName;
+  }
+};
+
+// Conditions
+struct IfAST : public ExpressionAST {
+  const std::shared_ptr<const ExpressionAST> condition;
+  const std::vector<std::shared_ptr<const ExpressionAST>> body;
+
+  IfAST(std::shared_ptr<const ExpressionAST> condition, std::vector<std::shared_ptr<const ExpressionAST>> body)
+      : condition(std::move(condition)), body(std::move(body)) {}
+  ~IfAST() override = default;
+
+  llvm::Value *generate(EmissionContext &context) const override;
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const IfAST *>(&o);
+    return other && *(this->condition) == *(other->condition) && compareBodies(this->body, other->body);
   }
 };
 

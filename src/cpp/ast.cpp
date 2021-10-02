@@ -95,21 +95,26 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
 
   auto functionArgumentIterator = function->arg_begin();
   auto argumentIterator = this->arguments.cbegin();
+  auto argumentTypesIterator = argumentTypes.cbegin();
+
+  // TODO: Createa a better "Type" type
 
   while (functionArgumentIterator != function->arg_end()) {
     assert(argumentIterator != this->arguments.cend());
+    assert(argumentTypesIterator != argumentTypes.cend());
 
     auto &functionArgument = (*functionArgumentIterator);
     auto argumentName = std::get<0>(*argumentIterator);
     functionArgument.setName(argumentName);
 
     // TODO: Could we use a VariableRefAST instead of copying the code?
-    auto alloca = context.builder->CreateAlloca(llvm::Type::getInt32Ty(*context.llvmContext), nullptr, argumentName);
+    auto alloca = context.builder->CreateAlloca(*argumentTypesIterator, nullptr, argumentName);
     context.builder->CreateStore(&functionArgument, alloca);
     context.addVariable(argumentName, alloca);
 
     ++functionArgumentIterator;
     ++argumentIterator;
+    ++argumentTypesIterator;
   }
 
   for (const auto &expression : body) {
@@ -139,6 +144,35 @@ llvm::Value *FunctionCallAST::generate(EmissionContext &context) const {
   }
 
   return context.builder->CreateCall(function, argumentValues);
+}
+
+llvm::Value *IfAST::generate(EmissionContext &context) const {
+  auto &builder = context.builder;
+  auto conditionValue = this->condition->generate(context);
+
+  // TODO: Is this necessary?
+  auto function = builder->GetInsertBlock()->getParent();
+  auto thenBlock = llvm::BasicBlock::Create(*context.llvmContext, "then", function);
+  auto postBlock = llvm::BasicBlock::Create(*context.llvmContext, "postIf");
+
+  builder->CreateCondBr(conditionValue, thenBlock, postBlock);
+
+  builder->SetInsertPoint(thenBlock);
+  std::vector<llvm::Value*> bodyValues;
+  for (const auto& statement : this->body) {
+    bodyValues.push_back(statement->generate(context));
+  }
+//  builder->CreateBr(postBlock);
+//  thenBlock = builder->GetInsertBlock();
+
+  function->getBasicBlockList().push_back(postBlock);
+  builder->SetInsertPoint(postBlock);
+
+  return llvm::UndefValue::get(llvm::Type::getVoidTy(*context.llvmContext));
+
+//  auto phi = builder->CreatePHI(llvm::Type::getInt32Ty(*context.llvmContext), 2, "phi");
+//  phi->addIncoming(bodyValues.back(), thenBlock);
+//  return phi;
 }
 
 llvm::Value *ReturnAST::generate(EmissionContext &context) const {

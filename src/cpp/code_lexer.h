@@ -48,10 +48,12 @@ enum TokenType : uint8_t {
   keyword_function, // fun
   keyword_let,      // let
   keyword_return,   // return
+  keyword_if,       // if
 };
 
 struct Token {
   explicit Token(TokenType id) : _id(id) {}
+  Token(TokenType id, uintmax_t v) : _id(id), _value(std::to_string(v)) {}
   Token(TokenType id, std::string v) : _id(id), _value(std::move(v)) {}
   ~Token() = default;
 

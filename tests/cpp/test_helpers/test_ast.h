@@ -52,6 +52,17 @@ void PrintTo(const FunctionCallAST &functionCallAST, std::ostream *os) {
   *os << "FunctionCallAST { " << functionCallAST.functionName << " }";
 }
 
+void PrintTo(const IfAST &ifAST, std::ostream *os) {
+  *os << "IfAST { condition = {";
+  PrintTo(*ifAST.condition, os);
+  *os << "}, then = [" << ifAST.body.size() << "]: {";
+  for (const auto &expression : ifAST.body) {
+    PrintTo(*expression, os);
+    *os << ", ";
+  }
+  *os << "}";
+}
+
 void PrintTo(const ReturnAST &returnAST, std::ostream *os) {
   *os << "ReturnAST { ";
   PrintTo(*returnAST.value, os);
@@ -88,6 +99,7 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto varDecAST = dynamic_cast<const VariableDeclarationAST *>(&expressionAST);
   auto varRefAST = dynamic_cast<const VariableReferenceAST *>(&expressionAST);
   auto functionCallAST = dynamic_cast<const FunctionCallAST *>(&expressionAST);
+  auto ifAST = dynamic_cast<const IfAST *>(&expressionAST);
   auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
   auto plusOperationAST = dynamic_cast<const PlusOperationAST *>(&expressionAST);
   auto minusOperationAST = dynamic_cast<const MinusOperationAST *>(&expressionAST);
@@ -103,6 +115,8 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
     PrintTo(*varRefAST, os);
   } else if (functionCallAST) {
     PrintTo(*functionCallAST, os);
+  } else if (ifAST) {
+    PrintTo(*ifAST, os);
   } else if (returnAST) {
     PrintTo(*returnAST, os);
   } else if (plusOperationAST) {

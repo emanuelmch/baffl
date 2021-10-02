@@ -390,9 +390,87 @@ TEST(CodeParser, OperatorEquals) {
 
   auto expected = ASTBuilder::function("function", "bool") //
                       .addArgument("x", "bool")
-                      .returnExpression([=]() {                           //
+                      .returnExpression([=]() {                          //
                         return variable("x")->equals(boolLiteral(true)); //
                       });
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, IfWithBoolean) {
+  // fun function(x: bool): i32 { if (x) { return 1; } return 0; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "function");
+  input.emplace(bracket_open);
+  input.emplace(name, "x");
+  input.emplace(colon);
+  input.emplace(name, "bool");
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_if);
+  input.emplace(bracket_open);
+  input.emplace(name, "x");
+  input.emplace(bracket_close);
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, 1);
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, 0);
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("function", "i32")                   //
+                      .addArgument("x", "bool")                             //
+                      .ifExpression([]() { return variable("x"); },         //
+                                    [](auto x) { x->returnIntLiteral(1); }) //
+                      .returnExpression([=]() { return intLiteral(0); });
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, IfWithExpression) {
+  // fun function(): i32 { if (1 == 1) { return 1; } return 0; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "function");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_if);
+  input.emplace(bracket_open);
+  input.emplace(literal_integer, 1);
+  input.emplace(operator_equals);
+  input.emplace(literal_integer, 1);
+  input.emplace(bracket_close);
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, 1);
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, 0);
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("function", "i32")                                  //
+                      .ifExpression([]() { return intLiteral(1)->equals(intLiteral(1)); }, //
+                                    [](auto x) { x->returnIntLiteral(1); })                //
+                      .returnExpression([=]() { return intLiteral(0); });
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 

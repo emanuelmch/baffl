@@ -30,6 +30,7 @@
 #include <llvm/IR/Module.h>
 
 #include <cassert>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <utility>
@@ -52,7 +53,11 @@ struct Scope {
       return variables[name];
     }
 
-    assert(parent != nullptr);
+    if (parent == nullptr) {
+      std::cerr << "Unknown variable: " << name << "\n";
+      std::exit(1);
+    }
+
     return parent->getVariable(name);
   }
 
