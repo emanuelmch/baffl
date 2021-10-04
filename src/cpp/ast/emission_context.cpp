@@ -23,11 +23,14 @@
 #include "emission_context.h"
 
 #include <llvm/IR/Verifier.h>
+#include <llvm/Transforms/Utils.h> // llvm::createPromoteMemoryToRegisterPass
 
 EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
     : llvmContext(std::move(context)), builder(std::make_shared<llvm::IRBuilder<>>(*llvmContext)),
       module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), passManager(module.get()) {
   passManager.doInitialization();
+  // Promote allocas to registers.
+  passManager.add(llvm::createPromoteMemoryToRegisterPass());
 }
 
 bool EmissionContext::runPasses(llvm::Function *function) {

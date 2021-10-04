@@ -77,6 +77,7 @@ set(integration_tests
         tests/integration/complex_function_plus.baffl
         tests/integration/empty.baffl
         tests/integration/error_code.baffl
+        tests/integration/fibonacci.baffl
         tests/integration/function_arguments.baffl
         tests/integration/function_arguments_bool.baffl
         tests/integration/function_call.baffl

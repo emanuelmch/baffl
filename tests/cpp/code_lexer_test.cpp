@@ -323,32 +323,32 @@ TEST(CodeLexer, OperatorEquals) {
 TEST(CodeLexer, IfWithBoolean) {
   auto input = "fun function(x: bool): i32 { if (x) { return 1; } return 0; }";
 
-    std::queue<Token> expected;
-    expected.emplace(keyword_function);
-    expected.emplace(name, "function");
-    expected.emplace(bracket_open);
-    expected.emplace(name, "x");
-    expected.emplace(colon);
-    expected.emplace(name, "bool");
-    expected.emplace(bracket_close);
-    expected.emplace(colon);
-    expected.emplace(name, "i32");
-    expected.emplace(curly_open);
-    expected.emplace(keyword_if);
-    expected.emplace(bracket_open);
-    expected.emplace(name, "x");
-    expected.emplace(bracket_close);
-    expected.emplace(curly_open);
-    expected.emplace(keyword_return);
-    expected.emplace(literal_integer, 1);
-    expected.emplace(semicolon);
-    expected.emplace(curly_close);
-    expected.emplace(keyword_return);
-    expected.emplace(literal_integer, 0);
-    expected.emplace(semicolon);
-    expected.emplace(curly_close);
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "function");
+  expected.emplace(bracket_open);
+  expected.emplace(name, "x");
+  expected.emplace(colon);
+  expected.emplace(name, "bool");
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_if);
+  expected.emplace(bracket_open);
+  expected.emplace(name, "x");
+  expected.emplace(bracket_close);
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(literal_integer, 1);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+  expected.emplace(keyword_return);
+  expected.emplace(literal_integer, 0);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
 
-    EXPECT_EQ(CodeLexer::tokenise(input), expected);
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
 
 TEST(CodeLexer, IfWithExpression) {
@@ -375,6 +375,30 @@ TEST(CodeLexer, IfWithExpression) {
   expected.emplace(curly_close);
   expected.emplace(keyword_return);
   expected.emplace(literal_integer, 0);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
+TEST(CodeLexer, LessThan) {
+  auto input = "fun lessThanTwo(x: i32): bool { return x < 2; }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "lessThanTwo");
+  expected.emplace(bracket_open);
+  expected.emplace(name, "x");
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "bool");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(name, "x");
+  expected.emplace(operator_less_than);
+  expected.emplace(literal_integer, 2);
   expected.emplace(semicolon);
   expected.emplace(curly_close);
 

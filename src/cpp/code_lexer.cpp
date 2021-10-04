@@ -63,6 +63,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case operator_equals:
     os << "`==`";
     break;
+  case operator_less_than:
+    os << "`<`";
+    break;
   case name:
     os << "name: [" << token.valueAsString() << "]";
     break;
@@ -175,6 +178,9 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
     } else {
       return Token(operator_assign);
     }
+  case '<':
+    ++(*pos);
+    return Token(operator_less_than);
   case '+':
     ++(*pos);
     return Token(operator_plus);

@@ -477,3 +477,34 @@ TEST(CodeParser, IfWithExpression) {
   ASSERT_EQ(actual.size(), 1);
   EXPECT_EQ(actual[0], expected);
 }
+
+TEST(CodeLexer, LessThan) {
+  // fun lessThanTwo(x: i32): bool { return x < 2; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "lessThanTwo");
+  input.emplace(bracket_open);
+  input.emplace(name, "x");
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "bool");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(name, "x");
+  input.emplace(operator_less_than);
+  input.emplace(literal_integer, 2);
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("lessThanTwo", "bool") //
+                      .addArgument("x", "i32")                //
+                      .returnExpression([=]() { return variable("x")->lessThan(intLiteral(2)); });
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}

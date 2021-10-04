@@ -41,6 +41,7 @@ enum TokenType : uint8_t {
   operator_plus,    // +
   operator_minus,   // -
   operator_equals,  // ==
+  operator_less_than,  // <
   name,             // name
   literal_integer,  // integer
   keyword_true,     // true

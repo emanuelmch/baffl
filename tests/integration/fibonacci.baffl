@@ -1,0 +1,11 @@
+fun fibonacci(x: i32): i32 {
+    if (x < 3) {
+        return 1;
+    }
+
+    return fibonacci(x - 1) + fibonacci(x - 2);
+}
+
+fun main(): i32 {
+    return fibonacci(13);
+}

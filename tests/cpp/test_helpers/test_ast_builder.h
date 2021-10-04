@@ -34,6 +34,7 @@ struct ExpressionBuilder {
   std::shared_ptr<ExpressionBuilder> plus(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> minus(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> equals(const std::shared_ptr<ExpressionBuilder> &);
+  std::shared_ptr<ExpressionBuilder> lessThan(const std::shared_ptr<ExpressionBuilder> &);
 
   virtual std::shared_ptr<ExpressionBuilder> to_shared() = 0;
   virtual std::shared_ptr<ExpressionAST> build() = 0;
@@ -63,6 +64,8 @@ struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
       return std::make_shared<MinusOperationAST>(left, right);
     case operator_equals:
       return std::make_shared<EqualsOperationAST>(left, right);
+    case operator_less_than:
+      return std::make_shared<LessThanOperationAST>(left, right);
     default:
       assert(!"Unknown operator");
       return std::make_shared<PlusOperationAST>(left, right);
@@ -83,9 +86,15 @@ inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::minus(const std::sh
 }
 
 inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::equals(const std::shared_ptr<ExpressionBuilder> &right) {
-  const std::shared_ptr<ExpressionBuilder> first = to_shared();
-  const std::shared_ptr<ExpressionBuilder> &second = right;
+  auto first = to_shared();
+  auto &second = right;
   return std::make_shared<BinaryOperatorExpressionBuilder>(operator_equals, first, second);
+}
+
+inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::lessThan(const std::shared_ptr<ExpressionBuilder> &right) {
+  auto first = to_shared();
+  auto &second = right;
+  return std::make_shared<BinaryOperatorExpressionBuilder>(operator_less_than, first, second);
 }
 
 struct BoolLiteralExpressionBuilder : ExpressionBuilder {
@@ -94,7 +103,9 @@ struct BoolLiteralExpressionBuilder : ExpressionBuilder {
   explicit BoolLiteralExpressionBuilder(bool value) : value(value) {}
   ~BoolLiteralExpressionBuilder() override = default;
 
-  inline std::shared_ptr<ExpressionBuilder> to_shared() override { return std::make_shared<BoolLiteralExpressionBuilder>(*this); }
+  inline std::shared_ptr<ExpressionBuilder> to_shared() override {
+    return std::make_shared<BoolLiteralExpressionBuilder>(*this);
+  }
   inline std::shared_ptr<ExpressionAST> build() override { return std::make_shared<LiteralBooleanAST>(value); }
 };
 
@@ -104,7 +115,9 @@ struct IntLiteralExpressionBuilder : ExpressionBuilder {
   explicit IntLiteralExpressionBuilder(uint64_t value) : value(value) {}
   ~IntLiteralExpressionBuilder() override = default;
 
-  inline std::shared_ptr<ExpressionBuilder> to_shared() override { return std::make_shared<IntLiteralExpressionBuilder>(*this); }
+  inline std::shared_ptr<ExpressionBuilder> to_shared() override {
+    return std::make_shared<IntLiteralExpressionBuilder>(*this);
+  }
   inline std::shared_ptr<ExpressionAST> build() override { return std::make_shared<LiteralIntegerAST>(value); }
 };
 
@@ -114,7 +127,9 @@ struct VariableExpressionBuilder : ExpressionBuilder {
   explicit VariableExpressionBuilder(std::string name) : name(std::move(name)) {}
   ~VariableExpressionBuilder() override = default;
 
-  inline std::shared_ptr<ExpressionBuilder> to_shared() override { return std::make_shared<VariableExpressionBuilder>(*this); }
+  inline std::shared_ptr<ExpressionBuilder> to_shared() override {
+    return std::make_shared<VariableExpressionBuilder>(*this);
+  }
   inline std::shared_ptr<ExpressionAST> build() override { return std::make_shared<VariableReferenceAST>(name); }
 };
 
@@ -131,9 +146,7 @@ inline std::shared_ptr<ExpressionBuilder> variable(const std::string &name) {
 }
 
 struct ASTBuilder {
-  static inline ASTBuilder block() {
-    return ASTBuilder{};
-  }
+  static inline ASTBuilder block() { return ASTBuilder{}; }
 
   static inline ASTBuilder function(const std::string &name, const std::string &returnType) {
     ASTBuilder builder;
@@ -149,7 +162,7 @@ struct ASTBuilder {
   }
 
   inline ASTBuilder ifExpression(const std::function<std::shared_ptr<ExpressionBuilder>()> &condition,
-                                 const std::function<void(ASTBuilder*)> &positiveBranch) {
+                                 const std::function<void(ASTBuilder *)> &positiveBranch) {
     auto conditionAst = condition()->build();
 
     // TODO: Maybe we
