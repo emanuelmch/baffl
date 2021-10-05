@@ -14,3 +14,9 @@ Bill's Awesome For Funsies Language
 * bool (alongide _true_ and _false_ literals)
 * i32 (alongside natural literals - 0, 1, 2, etc.)
 * _implicit_ void (on function return types)
+
+## Things to do before 0.1
+* A better `if` (and maybe even an `else`)
+* One kind of loop (I'm thinking `while`)
+* Some kind of print function
+
