@@ -1,0 +1,5 @@
+fun main(): i32 {
+    let x = 11;
+    x = x + 21;
+    return x;
+}

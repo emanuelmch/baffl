@@ -178,9 +178,24 @@ struct ASTBuilder {
 
   inline ASTBuilder declareVariable(const std::string &varName, uint64_t value) {
     auto literalAst = std::make_shared<LiteralIntegerAST>(value);
-    VariableDeclarationAST test(varName, literalAst);
     auto declarationAst = std::make_shared<VariableDeclarationAST>(varName, literalAst);
     body.push_back(declarationAst);
+
+    return *this;
+  }
+
+  inline ASTBuilder declareMutableVariable(const std::string &varName, uint64_t value) {
+    auto literalAst = std::make_shared<LiteralIntegerAST>(value);
+    auto declarationAst = std::make_shared<VariableDeclarationAST>(varName, literalAst, true);
+    body.push_back(declarationAst);
+
+    return *this;
+  }
+
+  inline ASTBuilder assignVariable(const std::string &varName, uint64_t value) {
+    auto literalAst = std::make_shared<LiteralIntegerAST>(value);
+    auto assignmentAst = std::make_shared<VariableAssignmentAST>(varName, literalAst);
+    body.push_back(assignmentAst);
 
     return *this;
   }

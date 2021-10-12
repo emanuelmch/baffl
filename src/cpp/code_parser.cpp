@@ -24,6 +24,28 @@
 
 inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *tokens);
 
+// Reads any primary expression that may come after a name
+inline static std::shared_ptr<ExpressionAST> readNamePrimary(std::queue<Token> *tokens, const std::string &thingName) {
+  if (tokens->front().id() == bracket_open) {
+    std::vector<std::shared_ptr<ExpressionAST>> arguments;
+
+    tokens->pop();
+    while (tokens->front().id() != bracket_close) {
+      arguments.push_back(readExpression(tokens));
+      assert(tokens->front().id() == comma || tokens->front().id() == bracket_close);
+      if (tokens->front().id() == comma) {
+        tokens->pop();
+      }
+    }
+    assert(tokens->front().id() == bracket_close);
+    tokens->pop();
+
+    return std::make_shared<FunctionCallAST>(thingName, arguments);
+  } else {
+    return std::make_shared<VariableReferenceAST>(thingName);
+  }
+}
+
 inline static std::shared_ptr<ExpressionAST> readPrimary(std::queue<Token> *tokens) {
   std::shared_ptr<ExpressionAST> expression;
 
@@ -39,25 +61,7 @@ inline static std::shared_ptr<ExpressionAST> readPrimary(std::queue<Token> *toke
     // We can't tell yet whether it's a variable or a function call
     auto thingName = tokens->front().valueAsString();
     tokens->pop();
-
-    if (tokens->front().id() == bracket_open) {
-      std::vector<std::shared_ptr<ExpressionAST>> arguments;
-
-      tokens->pop();
-      while (tokens->front().id() != bracket_close) {
-        arguments.push_back(readExpression(tokens));
-        assert(tokens->front().id() == comma || tokens->front().id() == bracket_close);
-        if (tokens->front().id() == comma) {
-          tokens->pop();
-        }
-      }
-      assert(tokens->front().id() == bracket_close);
-      tokens->pop();
-
-      expression = std::make_shared<FunctionCallAST>(thingName, arguments);
-    } else {
-      expression = std::make_shared<VariableReferenceAST>(thingName);
-    }
+    expression = readNamePrimary(tokens, thingName);
   }
 
   return expression;
@@ -106,9 +110,10 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     statement = std::make_shared<ReturnAST>(returnValue);
     assert(tokens->front().id() == semicolon);
     tokens->pop();
-    break;
-  }
-  case keyword_let: {
+  } break;
+  case keyword_let:
+  case keyword_var: {
+    auto isMutable = (tokens->front().id() == keyword_var);
     tokens->pop();
     assert(tokens->front().id() == name);
     auto varName = tokens->front().valueAsString();
@@ -116,11 +121,10 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     assert(tokens->front().id() == operator_assign);
     tokens->pop();
     auto initialValue = readExpression(tokens);
-    statement = std::make_shared<VariableDeclarationAST>(varName, initialValue);
+    statement = std::make_shared<VariableDeclarationAST>(varName, initialValue, isMutable);
     assert(tokens->front().id() == semicolon);
     tokens->pop();
-    break;
-  }
+  } break;
   case keyword_if: {
     tokens->pop();
     assert(tokens->front().id() == bracket_open);
@@ -141,12 +145,22 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     statement = std::make_shared<IfAST>(condition, positiveBranch);
     break;
   }
-  case name:
-    statement = readExpression(tokens);
-    assert(dynamic_cast<const FunctionCallAST *>(statement.get()));
+  case name: {
+    auto thingName = tokens->front().valueAsString();
+    tokens->pop();
+
+    if (tokens->front().id() == operator_assign) {
+      tokens->pop();
+      auto rhs = readExpression(tokens);
+      statement = std::make_shared<VariableAssignmentAST>(thingName, rhs);
+    } else {
+      statement = readNamePrimary(tokens, thingName);
+      assert(dynamic_cast<const FunctionCallAST *>(statement.get()));
+    }
+
     assert(tokens->front().id() == semicolon);
     tokens->pop();
-    break;
+  } break;
   default:
     assert(!"Statement starting with invalid token!");
   }

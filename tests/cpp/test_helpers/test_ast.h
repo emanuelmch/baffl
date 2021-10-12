@@ -38,8 +38,14 @@ void PrintTo(const LiteralIntegerAST &literalAST, std::ostream *os) {
   *os << "LiteralIntegerAST {" << literalAST.value << "}";
 }
 
+void PrintTo(const VariableAssignmentAST &assignmentAst, std::ostream *os) {
+  *os << "VarAssignmentAST { " << assignmentAst.varName << " = {";
+  PrintTo(*assignmentAst.value, os);
+  *os << "}";
+}
+
 void PrintTo(const VariableDeclarationAST &varDecAST, std::ostream *os) {
-  *os << "VarDecAST { " << varDecAST.varName << ", ";
+  *os << "VarDecAST { " << (varDecAST.isMutable ? "var" : "let") << " " << varDecAST.varName << " = ";
   PrintTo(*varDecAST.value, os);
   *os << " }";
 }
@@ -94,8 +100,10 @@ void PrintTo(const EqualsOperationAST &equalsAST, std::ostream *os) {
 }
 
 void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
+  // FIXME: Drop all of this, let's just have a debug function on the interface
   auto literalBooleanAST = dynamic_cast<const LiteralBooleanAST *>(&expressionAST);
   auto literalIntegerAST = dynamic_cast<const LiteralIntegerAST *>(&expressionAST);
+  auto varAssignAST = dynamic_cast<const VariableAssignmentAST *>(&expressionAST);
   auto varDecAST = dynamic_cast<const VariableDeclarationAST *>(&expressionAST);
   auto varRefAST = dynamic_cast<const VariableReferenceAST *>(&expressionAST);
   auto functionCallAST = dynamic_cast<const FunctionCallAST *>(&expressionAST);
@@ -109,6 +117,8 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
     PrintTo(*literalBooleanAST, os);
   } else if (literalIntegerAST) {
     PrintTo(*literalIntegerAST, os);
+  } else if (varAssignAST) {
+    PrintTo(*varAssignAST, os);
   } else if (varDecAST) {
     PrintTo(*varDecAST, os);
   } else if (varRefAST) {

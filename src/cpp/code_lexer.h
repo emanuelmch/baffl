@@ -48,6 +48,7 @@ enum TokenType : uint8_t {
   keyword_false,    // false
   keyword_function, // fun
   keyword_let,      // let
+  keyword_var,      // var
   keyword_return,   // return
   keyword_if,       // if
 };

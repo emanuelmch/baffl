@@ -205,6 +205,36 @@ TEST(CodeParser, FunctionWithOneArgument) {
   EXPECT_EQ(actual[0], expected);
 }
 
+TEST(CodeLexer, MutableVariables) {
+  // fun xy() { var x = 1; x = 2; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "xy");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(curly_open);
+  input.emplace(keyword_var);
+  input.emplace(name, "x");
+  input.emplace(operator_assign);
+  input.emplace(literal_integer, "1");
+  input.emplace(semicolon);
+  input.emplace(name, "x");
+  input.emplace(operator_assign);
+  input.emplace(literal_integer, "2");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("xy", "void") //
+                      .declareMutableVariable("x", 1)
+                      .assignVariable("x", 2);
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
 TEST(CodeParser, BinaryOperator_Plus) {
   // fun main(): i32 { return 1 + 2; }
 

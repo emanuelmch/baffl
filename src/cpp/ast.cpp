@@ -47,6 +47,13 @@ llvm::Value *VariableDeclarationAST::generate(EmissionContext &context) const {
   return alloca;
 }
 
+llvm::Value *VariableAssignmentAST::generate(EmissionContext &context) const {
+  auto lhs = context.getVariable(this->varName);
+  auto rhs = this->value->generate(context);
+
+  return context.builder->CreateStore(rhs, lhs);
+}
+
 llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
   auto variable = context.getVariable(this->varName);
   return context.builder->CreateLoad(variable);
@@ -158,21 +165,21 @@ llvm::Value *IfAST::generate(EmissionContext &context) const {
   builder->CreateCondBr(conditionValue, thenBlock, postBlock);
 
   builder->SetInsertPoint(thenBlock);
-  std::vector<llvm::Value*> bodyValues;
-  for (const auto& statement : this->body) {
+  std::vector<llvm::Value *> bodyValues;
+  for (const auto &statement : this->body) {
     bodyValues.push_back(statement->generate(context));
   }
-//  builder->CreateBr(postBlock);
-//  thenBlock = builder->GetInsertBlock();
+  //  builder->CreateBr(postBlock);
+  //  thenBlock = builder->GetInsertBlock();
 
   function->getBasicBlockList().push_back(postBlock);
   builder->SetInsertPoint(postBlock);
 
   return llvm::UndefValue::get(llvm::Type::getVoidTy(*context.llvmContext));
 
-//  auto phi = builder->CreatePHI(llvm::Type::getInt32Ty(*context.llvmContext), 2, "phi");
-//  phi->addIncoming(bodyValues.back(), thenBlock);
-//  return phi;
+  //  auto phi = builder->CreatePHI(llvm::Type::getInt32Ty(*context.llvmContext), 2, "phi");
+  //  phi->addIncoming(bodyValues.back(), thenBlock);
+  //  return phi;
 }
 
 llvm::Value *ReturnAST::generate(EmissionContext &context) const {

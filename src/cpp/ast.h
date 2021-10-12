@@ -94,14 +94,31 @@ struct LiteralIntegerAST : public ExpressionAST {
 struct VariableDeclarationAST : public ExpressionAST {
   const std::string varName;
   const std::shared_ptr<ExpressionAST> value;
+  const bool isMutable;
 
-  VariableDeclarationAST(std::string varName, std::shared_ptr<ExpressionAST> value)
-      : varName(std::move(varName)), value(std::move(value)) {}
+  VariableDeclarationAST(std::string varName, std::shared_ptr<ExpressionAST> value, bool isMutable = false)
+      : varName(std::move(varName)), value(std::move(value)), isMutable(isMutable) {}
 
   llvm::Value *generate(EmissionContext &) const override;
 
   inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const VariableDeclarationAST *>(&o);
+    return other && this->varName == other->varName && *(this->value) == *(other->value) &&
+           this->isMutable == other->isMutable;
+  }
+};
+
+struct VariableAssignmentAST : public ExpressionAST {
+  const std::string varName;
+  const std::shared_ptr<ExpressionAST> value;
+
+  VariableAssignmentAST(std::string varName, std::shared_ptr<ExpressionAST> value)
+      : varName(std::move(varName)), value(std::move(value)) {}
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const VariableAssignmentAST *>(&o);
     return other && this->varName == other->varName && *(this->value) == *(other->value);
   }
 };

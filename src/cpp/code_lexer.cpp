@@ -84,10 +84,12 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case keyword_let:
     os << "keyword: let";
     break;
+  case keyword_var:
+    os << "keyword: var";
+    break;
   case keyword_return:
     os << "keyword: return";
     break;
-
   case keyword_if:
     os << "keyword: if";
     break;
@@ -102,6 +104,8 @@ inline Token fromString(const std::string_view &token) {
     return Token{keyword_function};
   } else if (token == "let") {
     return Token{keyword_let};
+  } else if (token == "var") {
+    return Token{keyword_var};
   } else if (token == "return") {
     return Token{keyword_return};
   } else if (token == "if") {

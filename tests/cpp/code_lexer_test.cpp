@@ -176,6 +176,29 @@ TEST(CodeLexer, FunctionWithOneArgument) {
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
 
+TEST(CodeLexer, MutableVariables) {
+  auto input = "fun xy() { var x = 1; x = 2; }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "xy");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(curly_open);
+  expected.emplace(keyword_var);
+  expected.emplace(name, "x");
+  expected.emplace(operator_assign);
+  expected.emplace(literal_integer, "1");
+  expected.emplace(semicolon);
+  expected.emplace(name, "x");
+  expected.emplace(operator_assign);
+  expected.emplace(literal_integer, "2");
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
 TEST(CodeLexer, BinaryOperator_Plus) {
   auto input = "fun main(): i32 { return 1 + 2; }";
 
