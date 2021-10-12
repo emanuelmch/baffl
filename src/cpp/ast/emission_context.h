@@ -38,18 +38,23 @@
 // FIXME: Remove this line, but CLion is driving me crazy
 typedef u_int64_t uint64_t;
 
+struct VariableReference {
+  llvm::AllocaInst *value;
+  bool isMutable;
+};
+
 struct Scope {
   Scope *parent;
 
-  explicit Scope(Scope *parent) : parent(parent) {}
+  explicit inline Scope(Scope *parent) : parent(parent) {}
 
-  inline void addVariable(const std::string &name, llvm::AllocaInst *alloca) {
+  inline void addVariable(const std::string &name, const VariableReference &alloca) {
     assert(variables.count(name) == 0);
-    variables[name] = alloca;
+    variables.emplace(name, alloca);
   }
 
-  inline llvm::AllocaInst *getVariable(const std::string &name) {
-    if (variables.count(name)) {
+  inline const VariableReference &getVariable(const std::string &name) {
+    if (variables.find(name) != variables.end()) {
       return variables[name];
     }
 
@@ -62,7 +67,7 @@ struct Scope {
   }
 
 private:
-  std::map<std::string, llvm::AllocaInst *> variables;
+  std::map<std::string, const VariableReference> variables;
 };
 
 struct EmissionContext {
@@ -83,12 +88,12 @@ struct EmissionContext {
     }};
   }
 
-  inline void addVariable(const std::string &name, llvm::AllocaInst *alloca) {
+  inline void addVariable(const std::string &name, const VariableReference &alloca) {
     assert(scope != nullptr);
     scope->addVariable(name, alloca);
   }
 
-  inline llvm::AllocaInst *getVariable(const std::string &name) {
+  inline const VariableReference &getVariable(const std::string &name) {
     assert(scope != nullptr);
     return scope->getVariable(name);
   }
