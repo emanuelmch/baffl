@@ -25,6 +25,23 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/Transforms/Utils.h> // llvm::createPromoteMemoryToRegisterPass
 
+void Scope::addVariable(const std::string &name, const VariableReference &alloca) {
+  assert(variables.count(name) == 0);
+  variables.emplace(name, alloca);
+}
+
+const VariableReference &Scope::getVariable(const std::string &name) {
+  if (variables.find(name) != variables.end()) {
+    return variables[name];
+  }
+
+  if (parent == nullptr) {
+    std::cerr << "Unknown variable: " << name << "\n";
+    std::exit(1);
+  }
+
+  return parent->getVariable(name);
+}
 EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
     : llvmContext(std::move(context)), builder(std::make_shared<llvm::IRBuilder<>>(*llvmContext)),
       module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), passManager(module.get()) {

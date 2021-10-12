@@ -48,24 +48,8 @@ struct Scope {
 
   explicit inline Scope(Scope *parent) : parent(parent) {}
 
-  inline void addVariable(const std::string &name, const VariableReference &alloca) {
-    assert(variables.count(name) == 0);
-    variables.emplace(name, alloca);
-  }
-
-  inline const VariableReference &getVariable(const std::string &name) {
-    if (variables.find(name) != variables.end()) {
-      return variables[name];
-    }
-
-    if (parent == nullptr) {
-      std::cerr << "Unknown variable: " << name << "\n";
-      std::exit(1);
-    }
-
-    return parent->getVariable(name);
-  }
-
+  void addVariable(const std::string &name, const VariableReference &alloca);
+  const VariableReference &getVariable(const std::string &name);
 private:
   std::map<std::string, const VariableReference> variables;
 };
