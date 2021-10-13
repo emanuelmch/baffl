@@ -49,7 +49,7 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
     os << "`;`";
     break;
   case comma:
-    os << ",";
+    os << "`,`";
     break;
   case operator_assign:
     os << "`=`";
@@ -168,6 +168,9 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
   case '}':
     ++(*pos);
     return Token(curly_close);
+  case ',':
+    ++(*pos);
+    return Token(comma);
   case ':':
     ++(*pos);
     return Token(colon);

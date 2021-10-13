@@ -110,7 +110,7 @@ TEST(CodeParser, FunctionCall) {
   EXPECT_EQ(actual[0], expected);
 }
 
-TEST(CodeLexer, FunctionCallWithOneArgument) {
+TEST(CodeParser, FunctionCallWithOneArgument) {
   // fun main(): i32 { return functionCall(123); }
 
   std::queue<Token> input;
@@ -131,6 +131,38 @@ TEST(CodeLexer, FunctionCallWithOneArgument) {
 
   auto expected = ASTBuilder::function("main", "i32") //
                       .returnFunctionCall("functionCall", 123);
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, FunctionCallWithMultipleArguments) {
+  // fun main(): i32 { return functionCall(1, 2, 3); }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(name, "functionCall");
+  input.emplace(bracket_open);
+  input.emplace(literal_integer, "1");
+  input.emplace(comma);
+  input.emplace(literal_integer, "2");
+  input.emplace(comma);
+  input.emplace(literal_integer, "3");
+  input.emplace(bracket_close);
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("main", "i32") //
+                      .returnFunctionCall("functionCall", 1, 2, 3);
 
   auto actual = CodeParser::parseTopLevelExpressions(input);
 
@@ -205,7 +237,52 @@ TEST(CodeParser, FunctionWithOneArgument) {
   EXPECT_EQ(actual[0], expected);
 }
 
-TEST(CodeLexer, MutableVariables) {
+TEST(CodeParser, FunctionWithMultipleArguments) {
+  // fun main(x: i32, y: i32, z: i32): i32 { return x + y + z; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(name, "x");
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(comma);
+  input.emplace(name, "y");
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(comma);
+  input.emplace(name, "z");
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(name, "x");
+  input.emplace(operator_plus);
+  input.emplace(name, "y");
+  input.emplace(operator_plus);
+  input.emplace(name, "z");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("main", "i32") //
+                      .addArgument("x", "i32")
+                      .addArgument("y", "i32")
+                      .addArgument("z", "i32")
+                      .returnExpression([]() { //
+                        return variable("x")->plus(variable("y"))->plus(variable("z"));
+                      });
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, MutableVariables) {
   // fun xy() { var x = 1; x = 2; }
 
   std::queue<Token> input;
@@ -508,7 +585,7 @@ TEST(CodeParser, IfWithExpression) {
   EXPECT_EQ(actual[0], expected);
 }
 
-TEST(CodeLexer, LessThan) {
+TEST(CodeParser, LessThan) {
   // fun lessThanTwo(x: i32): bool { return x < 2; }
 
   std::queue<Token> input;

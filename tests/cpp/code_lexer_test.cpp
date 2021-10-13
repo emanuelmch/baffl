@@ -122,6 +122,32 @@ TEST(CodeLexer, FunctionCallWithOneArgument) {
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
 
+TEST(CodeLexer, FunctionCallWithMultipleArguments) {
+  auto input = "fun main(): i32 { return functionCall(1, 2, 3); }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "main");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(name, "functionCall");
+  expected.emplace(bracket_open);
+  expected.emplace(literal_integer, "1");
+  expected.emplace(comma);
+  expected.emplace(literal_integer, "2");
+  expected.emplace(comma);
+  expected.emplace(literal_integer, "3");
+  expected.emplace(bracket_close);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
 TEST(CodeLexer, MultipleFunctions) {
   auto input = "fun f1(): i32 { return 1; }\n"
                "fun f2(): i32 { return 2; }\n";
@@ -170,6 +196,40 @@ TEST(CodeLexer, FunctionWithOneArgument) {
   expected.emplace(curly_open);
   expected.emplace(keyword_return);
   expected.emplace(name, "x");
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
+TEST(CodeLexer, FunctionWithMultipleArguments) {
+  auto input = "fun main(x: i32, y: i32, z: i32): i32 { return x + y + z; }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "main");
+  expected.emplace(bracket_open);
+  expected.emplace(name, "x");
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(comma);
+  expected.emplace(name, "y");
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(comma);
+  expected.emplace(name, "z");
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(name, "x");
+  expected.emplace(operator_plus);
+  expected.emplace(name, "y");
+  expected.emplace(operator_plus);
+  expected.emplace(name, "z");
   expected.emplace(semicolon);
   expected.emplace(curly_close);
 

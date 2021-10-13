@@ -71,7 +71,7 @@ inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *t
   std::shared_ptr<ExpressionAST> expression = readPrimary(tokens);
 
   auto next = tokens->front().id();
-  while (next != semicolon && next != bracket_close) {
+  while (next != comma && next != semicolon && next != bracket_close) {
     // Binary operators
     // TODO: Stop repeating the same code for every operator
     if (next == operator_plus) {
@@ -218,6 +218,7 @@ inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
   if (tokens->front().id() == TokenType::name) {
     arguments.push_back(readArgument(tokens));
     while (tokens->front().id() == TokenType::comma) {
+      tokens->pop();
       arguments.push_back(readArgument(tokens));
     }
   }

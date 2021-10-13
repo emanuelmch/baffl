@@ -1,7 +1,7 @@
-fun randomFunction(x: i32): i32 {
-    return x;
+fun sum(x: i32, y: i32): i32 {
+    return x + y;
 }
 
 fun main(): i32 {
-    return randomFunction(48);
+    return sum(32, 64);
 }

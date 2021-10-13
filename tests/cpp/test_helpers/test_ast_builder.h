@@ -232,9 +232,22 @@ struct ASTBuilder {
     return *this;
   }
 
-  inline ASTBuilder returnFunctionCall(std::string name, uint64_t argument0) {
-    auto integerLiteralAst = std::make_shared<LiteralIntegerAST>(argument0);
+  inline ASTBuilder returnFunctionCall(std::string name, uint64_t arg0) {
+    auto integerLiteralAst = std::make_shared<LiteralIntegerAST>(arg0);
     std::vector<std::shared_ptr<ExpressionAST>> arguments{integerLiteralAst};
+    auto functionCallAst = std::make_shared<FunctionCallAST>(std::move(name), arguments);
+    auto returnAst = std::make_shared<ReturnAST>(functionCallAst);
+    body.push_back(returnAst);
+
+    return *this;
+  }
+
+  // TODO: Use var args instead of multiple overloads
+  inline ASTBuilder returnFunctionCall(std::string name, uint64_t arg0, uint64_t arg1, uint64_t arg2) {
+    auto arg0Ast = std::make_shared<LiteralIntegerAST>(arg0);
+    auto arg1Ast = std::make_shared<LiteralIntegerAST>(arg1);
+    auto arg2Ast = std::make_shared<LiteralIntegerAST>(arg2);
+    std::vector<std::shared_ptr<ExpressionAST>> arguments{arg0Ast, arg1Ast, arg2Ast};
     auto functionCallAst = std::make_shared<FunctionCallAST>(std::move(name), arguments);
     auto returnAst = std::make_shared<ReturnAST>(functionCallAst);
     body.push_back(returnAst);
