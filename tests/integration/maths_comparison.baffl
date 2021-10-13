@@ -1,0 +1,17 @@
+fun lessThan(x: i32, y: i32): bool {
+    return x < y;
+}
+
+fun main(): i32 {
+    var result = 0;
+
+    if (lessThan(1, 2)) {
+        result = result + 1;
+    }
+
+    if (lessThan(2, 2)) {
+        result = result + 2;
+    }
+
+    return result;
+}

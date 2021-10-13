@@ -42,6 +42,8 @@ struct TopLevelAST : public AST {
 
 struct ExpressionAST : public AST {
   virtual ~ExpressionAST() = default;
+
+  [[nodiscard]] virtual bool isTerminator() const { return false; }
 };
 
 // Generic Helpers
@@ -203,6 +205,8 @@ struct ReturnAST : public ExpressionAST {
     auto other = dynamic_cast<const ReturnAST *>(&o);
     return other && *(this->value) == *(other->value);
   }
+
+  bool isTerminator() const override { return true; }
 };
 
 // TODO: Should we replace all these with a "BinaryOperationAST"?

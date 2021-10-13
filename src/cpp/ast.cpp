@@ -167,12 +167,13 @@ llvm::Value *IfAST::generate(EmissionContext &context) const {
   builder->CreateCondBr(conditionValue, thenBlock, postBlock);
 
   builder->SetInsertPoint(thenBlock);
-  std::vector<llvm::Value *> bodyValues;
   for (const auto &statement : this->body) {
-    bodyValues.push_back(statement->generate(context));
+    statement->generate(context);
   }
-  //  builder->CreateBr(postBlock);
-  //  thenBlock = builder->GetInsertBlock();
+
+  if (body.back()->isTerminator() == false) {
+    builder->CreateBr(postBlock);
+  }
 
   function->getBasicBlockList().push_back(postBlock);
   builder->SetInsertPoint(postBlock);

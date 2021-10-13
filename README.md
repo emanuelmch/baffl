@@ -19,7 +19,7 @@ Bill's Awesome For Funsies Language
 * _implicit_ `void` (on function return types)
 
 ## Things to do before 0.1
-* A better `if` (and maybe even an `else`)
+* Give our `if` an `else` branch
 * One kind of loop (I'm thinking `while`)
 * Some kind of print function
 

@@ -81,6 +81,7 @@ set(integration_tests
         tests/integration/function_arguments.baffl
         tests/integration/function_arguments_bool.baffl
         tests/integration/function_call.baffl
+        tests/integration/maths_comparison.baffl
         tests/integration/maths_plus.baffl
         tests/integration/maths_plus_minus.baffl
         tests/integration/maths_plus_plus.baffl
