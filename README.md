@@ -10,7 +10,7 @@ Bill's Awesome For Funsies Language
   * `var` for mutable 
   * `=` for assignment 
 * Basic mathematical functions (`+`, `-`)
-* Basic comparison functions (`==` & `<`)
+* Basic comparison functions (`==`, `<` && `<=`)
 * Statements end with `;` (for now)
 
 ### Default Types

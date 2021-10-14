@@ -76,7 +76,7 @@ void PrintTo(const ReturnAST &returnAST, std::ostream *os) {
 }
 
 void PrintTo(const PlusOperationAST &plusAST, std::ostream *os) {
-  *os << "PlusOperationAST { ";
+  *os << "BinaryOperation: + { ";
   PrintTo(*plusAST.left, os);
   *os << ", ";
   PrintTo(*plusAST.right, os);
@@ -84,7 +84,7 @@ void PrintTo(const PlusOperationAST &plusAST, std::ostream *os) {
 }
 
 void PrintTo(const MinusOperationAST &minusAST, std::ostream *os) {
-  *os << "MinusOperationAST { ";
+  *os << "BinaryOperation: - { ";
   PrintTo(*minusAST.left, os);
   *os << ", ";
   PrintTo(*minusAST.right, os);
@@ -92,10 +92,26 @@ void PrintTo(const MinusOperationAST &minusAST, std::ostream *os) {
 }
 
 void PrintTo(const EqualsOperationAST &equalsAST, std::ostream *os) {
-  *os << "EqualsOperationAST { ";
+  *os << "BinaryOperation: == { ";
   PrintTo(*equalsAST.left, os);
   *os << ", ";
   PrintTo(*equalsAST.right, os);
+  *os << " }";
+}
+
+void PrintTo(const LessThanOperationAST &lessThanAst, std::ostream *os) {
+  *os << "BinaryOperation: < { ";
+  PrintTo(*lessThanAst.left, os);
+  *os << ", ";
+  PrintTo(*lessThanAst.right, os);
+  *os << " }";
+}
+
+void PrintTo(const LessThanOrEqualToOperationAST &lessThanOrEqualToAst, std::ostream *os) {
+  *os << "BinaryOperation: <= { ";
+  PrintTo(*lessThanOrEqualToAst.left, os);
+  *os << ", ";
+  PrintTo(*lessThanOrEqualToAst.right, os);
   *os << " }";
 }
 
@@ -112,6 +128,8 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto plusOperationAST = dynamic_cast<const PlusOperationAST *>(&expressionAST);
   auto minusOperationAST = dynamic_cast<const MinusOperationAST *>(&expressionAST);
   auto equalsOperationAST = dynamic_cast<const EqualsOperationAST *>(&expressionAST);
+  auto lessThanOperationAST = dynamic_cast<const LessThanOperationAST *>(&expressionAST);
+  auto lessThanOrEqualToOperationAST = dynamic_cast<const LessThanOrEqualToOperationAST *>(&expressionAST);
 
   if (literalBooleanAST) {
     PrintTo(*literalBooleanAST, os);
@@ -135,6 +153,10 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
     PrintTo(*minusOperationAST, os);
   } else if (equalsOperationAST) {
     PrintTo(*equalsOperationAST, os);
+  } else if (lessThanOperationAST) {
+    PrintTo(*lessThanOperationAST, os);
+  } else if (lessThanOrEqualToOperationAST) {
+    PrintTo(*lessThanOrEqualToOperationAST, os);
   } else {
     *os << "Unknown Expression AST!!!";
   }

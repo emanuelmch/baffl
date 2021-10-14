@@ -29,28 +29,29 @@
 #include <utility>
 
 enum TokenType : uint8_t {
-  noop = 0,         // no-op
-  bracket_open,     // (
-  bracket_close,    // )
-  curly_open,       // {
-  curly_close,      // }
-  colon,            // :
-  semicolon,        // ;
-  comma,            // ,
-  operator_assign,  // =
-  operator_plus,    // +
-  operator_minus,   // -
-  operator_equals,  // ==
-  operator_less_than,  // <
-  name,             // name
-  literal_integer,  // integer
-  keyword_true,     // true
-  keyword_false,    // false
-  keyword_function, // fun
-  keyword_let,      // let
-  keyword_var,      // var
-  keyword_return,   // return
-  keyword_if,       // if
+  noop = 0,                       // no-op
+  bracket_open,                   // (
+  bracket_close,                  // )
+  curly_open,                     // {
+  curly_close,                    // }
+  colon,                          // :
+  semicolon,                      // ;
+  comma,                          // ,
+  operator_assign,                // =
+  operator_plus,                  // +
+  operator_minus,                 // -
+  operator_equals,                // ==
+  operator_less_than,             // <
+  operator_less_than_or_equal_to, // <=
+  name,                           // name
+  literal_integer,                // integer
+  keyword_true,                   // true
+  keyword_false,                  // false
+  keyword_function,               // fun
+  keyword_let,                    // let
+  keyword_var,                    // var
+  keyword_return,                 // return
+  keyword_if,                     // if
 };
 
 struct Token {

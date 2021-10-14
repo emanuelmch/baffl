@@ -2,6 +2,10 @@ fun lessThan(x: i32, y: i32): bool {
     return x < y;
 }
 
+fun lessThanOrEqualTo(x: i32, y: i32): bool {
+    return x <= y;
+}
+
 fun main(): i32 {
     var result = 0;
 
@@ -11,6 +15,14 @@ fun main(): i32 {
 
     if (lessThan(2, 2)) {
         result = result + 2;
+    }
+
+    if (lessThanOrEqualTo(1, 2)) {
+        result = result + 4;
+    }
+
+    if (lessThanOrEqualTo(2, 2)) {
+        result = result + 8;
     }
 
     return result;

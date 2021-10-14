@@ -35,6 +35,7 @@ struct ExpressionBuilder {
   std::shared_ptr<ExpressionBuilder> minus(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> equals(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> lessThan(const std::shared_ptr<ExpressionBuilder> &);
+  std::shared_ptr<ExpressionBuilder> lessThanOrEqualTo(const std::shared_ptr<ExpressionBuilder> &);
 
   virtual std::shared_ptr<ExpressionBuilder> to_shared() = 0;
   virtual std::shared_ptr<ExpressionAST> build() = 0;
@@ -66,6 +67,8 @@ struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
       return std::make_shared<EqualsOperationAST>(left, right);
     case operator_less_than:
       return std::make_shared<LessThanOperationAST>(left, right);
+    case operator_less_than_or_equal_to:
+      return std::make_shared<LessThanOrEqualToOperationAST>(left, right);
     default:
       assert(!"Unknown operator");
       return std::make_shared<PlusOperationAST>(left, right);
@@ -95,6 +98,12 @@ inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::lessThan(const std:
   auto first = to_shared();
   auto &second = right;
   return std::make_shared<BinaryOperatorExpressionBuilder>(operator_less_than, first, second);
+}
+
+inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::lessThanOrEqualTo(const std::shared_ptr<ExpressionBuilder> &right) {
+  auto first = to_shared();
+  auto &second = right;
+  return std::make_shared<BinaryOperatorExpressionBuilder>(operator_less_than_or_equal_to, first, second);
 }
 
 struct BoolLiteralExpressionBuilder : ExpressionBuilder {

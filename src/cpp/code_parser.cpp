@@ -90,6 +90,10 @@ inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *t
       tokens->pop();
       auto right = readPrimary(tokens);
       expression = std::make_shared<LessThanOperationAST>(expression, right);
+    } else if (next == operator_less_than_or_equal_to) {
+      tokens->pop();
+      auto right = readPrimary(tokens);
+      expression = std::make_shared<LessThanOrEqualToOperationAST>(expression, right);
     } else {
       assert(!"Unexpected token");
     }

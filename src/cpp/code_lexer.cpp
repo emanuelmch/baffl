@@ -66,6 +66,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case operator_less_than:
     os << "`<`";
     break;
+  case operator_less_than_or_equal_to:
+    os << "`<=`";
+    break;
   case name:
     os << "name: [" << token.valueAsString() << "]";
     break;
@@ -152,7 +155,7 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
     // TODO: read floating point. Maybe?
     auto token = readTokenWhile(content.substr(*pos), [](auto it) { return std::isdigit(it); });
     (*pos) += token.size();
-    return Token(literal_integer, std::string(token));
+    return {literal_integer, std::string(token)};
   }
 
   switch (currentChar) {
@@ -187,7 +190,12 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
     }
   case '<':
     ++(*pos);
-    return Token(operator_less_than);
+    if (content[*pos] == '=') {
+      ++(*pos);
+      return Token(operator_less_than_or_equal_to);
+    } else {
+      return Token(operator_less_than);
+    }
   case '+':
     ++(*pos);
     return Token(operator_plus);
