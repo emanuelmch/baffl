@@ -1,0 +1,23 @@
+fun fibonacci(n: i32): i32 {
+    if (n < 2) {
+        return n;
+    }
+
+    var previousTerm = 0;
+    var currentTerm = 1;
+
+    var i = 2;
+    while(i <= n) {
+        let oldCurrentTerm = currentTerm;
+        currentTerm = previousTerm + currentTerm;
+        previousTerm = oldCurrentTerm;
+
+        i = i + 1;
+    }
+
+    return currentTerm;
+}
+
+fun main(): i32 {
+    return fibonacci(13);
+}

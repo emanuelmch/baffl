@@ -48,6 +48,7 @@ EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
   passManager.doInitialization();
   // Promote allocas to registers.
   passManager.add(llvm::createPromoteMemoryToRegisterPass());
+  passManager.add(llvm::createLoopSimplifyPass());
 }
 
 bool EmissionContext::runPasses(llvm::Function *function) {

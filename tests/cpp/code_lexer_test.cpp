@@ -464,6 +464,31 @@ TEST(CodeLexer, IfWithExpression) {
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
 
+TEST(CodeLexer, While) {
+  auto input = "fun x(): i32 { while (true) { return 1; } }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "x");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(colon);
+  expected.emplace(name, "i32");
+  expected.emplace(curly_open);
+  expected.emplace(keyword_while);
+  expected.emplace(bracket_open);
+  expected.emplace(keyword_true);
+  expected.emplace(bracket_close);
+  expected.emplace(curly_open);
+  expected.emplace(keyword_return);
+  expected.emplace(literal_integer, 1);
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
 TEST(CodeLexer, LessThan) {
   auto input = "fun lessThanTwo(x: i32): bool { return x < 2; }";
 

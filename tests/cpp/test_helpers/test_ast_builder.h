@@ -174,14 +174,26 @@ struct ASTBuilder {
                                  const std::function<void(ASTBuilder *)> &positiveBranch) {
     auto conditionAst = condition()->build();
 
-    // TODO: Maybe we
     auto innerBody = ASTBuilder::block();
     positiveBranch(&innerBody);
 
     auto ifAst = std::make_shared<IfAST>(conditionAst, innerBody.body);
     body.push_back(ifAst);
 
-    // FIXME: Implement this
+    return *this;
+  }
+
+  inline ASTBuilder whileExpression(const std::function<std::shared_ptr<ExpressionBuilder>()> &condition,
+                                 const std::function<void(ASTBuilder *)> &loopBody) {
+    auto conditionAst = condition()->build();
+
+    // TODO: Maybe we
+    auto innerBody = ASTBuilder::block();
+    loopBody(&innerBody);
+
+    auto whileAst = std::make_shared<WhileAST>(conditionAst, innerBody.body);
+    body.push_back(whileAst);
+
     return *this;
   }
 

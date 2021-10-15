@@ -96,6 +96,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case keyword_if:
     os << "keyword: if";
     break;
+  case keyword_while:
+    os << "keyword: while";
+    break;
   }
   return os;
 }
@@ -113,6 +116,8 @@ inline Token fromString(const std::string_view &token) {
     return Token{keyword_return};
   } else if (token == "if") {
     return Token{keyword_if};
+  } else if (token == "while") {
+    return Token{keyword_while};
   } else if (token == "true") {
     return Token{keyword_true};
   } else if (token == "false") {

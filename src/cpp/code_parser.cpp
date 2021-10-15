@@ -149,6 +149,26 @@ inline static std::shared_ptr<ExpressionAST> readStatement(std::queue<Token> *to
     statement = std::make_shared<IfAST>(condition, positiveBranch);
     break;
   }
+  case keyword_while: {
+    tokens->pop();
+    assert(tokens->front().id() == bracket_open);
+    tokens->pop();
+    auto condition = readExpression(tokens);
+    assert(tokens->front().id() == bracket_close);
+    tokens->pop();
+    assert(tokens->front().id() == curly_open);
+    tokens->pop();
+    std::vector<std::shared_ptr<const ExpressionAST>> body;
+    while (tokens->front().id() != curly_close) {
+      auto expression = readStatement(tokens);
+      body.push_back(expression);
+    }
+    assert(tokens->front().id() == curly_close);
+    tokens->pop();
+
+    statement = std::make_shared<WhileAST>(condition, body);
+    break;
+  }
   case name: {
     auto thingName = tokens->front().valueAsString();
     tokens->pop();

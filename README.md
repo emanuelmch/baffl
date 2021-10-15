@@ -12,6 +12,7 @@ Bill's Awesome For Funsies Language
 * Basic mathematical functions (`+`, `-`)
 * Basic comparison functions (`==`, `<` && `<=`)
 * Statements end with `;` (for now)
+* Conditions with `if`, loops with `while`
 
 ### Default Types
 * `bool` (alongide _true_ and _false_ literals)
@@ -20,7 +21,6 @@ Bill's Awesome For Funsies Language
 
 ## Things to do before 0.1
 * Give our `if` an `else` branch
-* One kind of loop (I'm thinking `while`)
 * Some kind of print function
 
 ## Things to do eventually

@@ -52,6 +52,7 @@ enum TokenType : uint8_t {
   keyword_var,                    // var
   keyword_return,                 // return
   keyword_if,                     // if
+  keyword_while,                  // while
 };
 
 struct Token {

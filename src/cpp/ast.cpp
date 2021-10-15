@@ -159,7 +159,6 @@ llvm::Value *IfAST::generate(EmissionContext &context) const {
   auto &builder = context.builder;
   auto conditionValue = this->condition->generate(context);
 
-  // TODO: Is this necessary?
   auto function = builder->GetInsertBlock()->getParent();
   auto thenBlock = llvm::BasicBlock::Create(*context.llvmContext, "then", function);
   auto postBlock = llvm::BasicBlock::Create(*context.llvmContext, "postIf");
@@ -183,6 +182,32 @@ llvm::Value *IfAST::generate(EmissionContext &context) const {
   //  auto phi = builder->CreatePHI(llvm::Type::getInt32Ty(*context.llvmContext), 2, "phi");
   //  phi->addIncoming(bodyValues.back(), thenBlock);
   //  return phi;
+}
+
+llvm::Value *WhileAST::generate(EmissionContext &context) const {
+  auto &builder = context.builder;
+
+  auto function = builder->GetInsertBlock()->getParent();
+  auto conditionBlock = llvm::BasicBlock::Create(*context.llvmContext, "loop.condition");
+  builder->CreateBr(conditionBlock);
+  function->getBasicBlockList().push_back(conditionBlock);
+
+  auto bodyBlock = llvm::BasicBlock::Create(*context.llvmContext, "loop.body", function);
+  auto exitBlock = llvm::BasicBlock::Create(*context.llvmContext, "loop.exit", function);
+
+  builder->SetInsertPoint(conditionBlock);
+  auto conditionValue = this->condition->generate(context);
+  builder->CreateCondBr(conditionValue, bodyBlock, exitBlock);
+
+  builder->SetInsertPoint(bodyBlock);
+  for (const auto &statement : this->body) {
+    statement->generate(context);
+  }
+  builder->CreateBr(conditionBlock);
+
+  builder->SetInsertPoint(exitBlock);
+
+  return llvm::UndefValue::get(llvm::Type::getVoidTy(*context.llvmContext));
 }
 
 llvm::Value *ReturnAST::generate(EmissionContext &context) const {

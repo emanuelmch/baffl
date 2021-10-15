@@ -8,7 +8,7 @@ TEST_FILE=$2
 TEST_OBJECT=${TEMP_DIR}/object.o
 TEST_EXECUTABLE=${TEMP_DIR}/executable
 
-
+echo $TEMP_DIR
 
 # Compile the test file
 $COMPILER "${TEST_FILE}" -vo "${TEST_OBJECT}" || exit 1
@@ -32,5 +32,5 @@ else
   RESULT=1
 fi
 
-rm -rf "$TEMP_DIR"
+#rm -rf "$TEMP_DIR"
 exit $RESULT

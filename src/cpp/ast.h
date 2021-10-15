@@ -192,6 +192,22 @@ struct IfAST : public ExpressionAST {
   }
 };
 
+// Loops
+struct WhileAST : public ExpressionAST {
+  const std::shared_ptr<const ExpressionAST> condition;
+  const std::vector<std::shared_ptr<const ExpressionAST>> body;
+
+  WhileAST(std::shared_ptr<const ExpressionAST> condition, std::vector<std::shared_ptr<const ExpressionAST>> body)
+      : condition(std::move(condition)), body(std::move(body)) {}
+  ~WhileAST() override = default;
+
+  llvm::Value *generate(EmissionContext &context) const override;
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const WhileAST *>(&o);
+    return other && *(this->condition) == *(other->condition) && compareBodies(this->body, other->body);
+  }
+};
+
 // Operations
 struct ReturnAST : public ExpressionAST {
   const std::shared_ptr<const ExpressionAST> value;
