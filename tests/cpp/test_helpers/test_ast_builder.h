@@ -157,6 +157,13 @@ inline std::shared_ptr<ExpressionBuilder> variable(const std::string &name) {
 struct ASTBuilder {
   static inline ASTBuilder block() { return ASTBuilder{}; }
 
+  static inline ASTBuilder import(const std::string &name) {
+    ASTBuilder builder;
+    builder.isImport = true;
+    builder.functionName = name;
+    return builder;
+  }
+
   static inline ASTBuilder function(const std::string &name, const std::string &returnType) {
     ASTBuilder builder;
     builder.functionName = name;
@@ -199,6 +206,14 @@ struct ASTBuilder {
 
   inline ASTBuilder declareVariable(const std::string &varName, uint64_t value) {
     auto literalAst = std::make_shared<LiteralIntegerAST>(value);
+    auto declarationAst = std::make_shared<VariableDeclarationAST>(varName, literalAst);
+    body.push_back(declarationAst);
+
+    return *this;
+  }
+
+  inline ASTBuilder declareVariable(const std::string &varName, const std::string &value) {
+    auto literalAst = std::make_shared<LiteralStringAST>(value);
     auto declarationAst = std::make_shared<VariableDeclarationAST>(varName, literalAst);
     body.push_back(declarationAst);
 
@@ -285,10 +300,14 @@ struct ASTBuilder {
   }
 
   [[nodiscard]] inline std::shared_ptr<AST> build() const {
+    if (isImport) {
+      return std::make_shared<ImportAST>(functionName);
+    }
     return std::make_shared<FunctionAST>(functionName, functionReturnType, functionArguments, body);
   }
 
 private:
+  bool isImport = false;
   std::string functionName;
   std::string functionReturnType;
   std::vector<std::tuple<std::string, std::string>> functionArguments;

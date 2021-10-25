@@ -56,6 +56,9 @@ inline static std::shared_ptr<ExpressionAST> readPrimary(std::queue<Token> *toke
   } else if (next.id() == keyword_true || next.id() == keyword_false) {
     expression = std::make_shared<LiteralBooleanAST>(next.id() == keyword_true);
     tokens->pop();
+  } else if (next.id() == literal_string) {
+    expression = std::make_shared<LiteralStringAST>(next.valueAsString());
+    tokens->pop();
   } else {
     assert(next.id() == name);
     // We can't tell yet whether it's a variable or a function call
@@ -226,9 +229,9 @@ inline static std::vector<std::shared_ptr<const ExpressionAST>> readBody(std::qu
   return body;
 }
 
-inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
+inline std::shared_ptr<TopLevelAST> readFunction(std::queue<Token> *tokens) {
   std::vector<std::tuple<std::string, std::string>> arguments;
-  // FIXME: make this generic
+
   assert(tokens->front().id() == keyword_function);
   tokens->pop();
 
@@ -264,6 +267,29 @@ inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
 
   auto body = readBody(tokens);
   return std::make_shared<FunctionAST>(name, returnType, arguments, body);
+}
+
+inline std::shared_ptr<TopLevelAST> readImport(std::queue<Token> *tokens) {
+  assert(tokens->front().id() == keyword_import);
+  tokens->pop();
+
+  assert(tokens->front().id() == name);
+  auto name = tokens->front().valueAsString();
+  tokens->pop();
+
+  assert(tokens->front().id() == semicolon);
+  tokens->pop();
+
+  return std::make_shared<ImportAST>(name);
+}
+
+inline std::shared_ptr<TopLevelAST> readTopLevel(std::queue<Token> *tokens) {
+  if (tokens->front().id() == keyword_function) {
+    return readFunction(tokens);
+  } else {
+    assert(tokens->front().id() == keyword_import);
+    return readImport(tokens);
+  }
 }
 
 std::vector<std::shared_ptr<TopLevelAST>> CodeParser::parseTopLevelExpressions(std::queue<Token> input) {

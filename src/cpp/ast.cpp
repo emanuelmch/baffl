@@ -24,6 +24,7 @@
 
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/InlineAsm.h>
 
 llvm::Value *LiteralBooleanAST::generate(EmissionContext &context) const {
   return llvm::ConstantInt::getBool(*context.llvmContext, value);
@@ -31,6 +32,24 @@ llvm::Value *LiteralBooleanAST::generate(EmissionContext &context) const {
 
 llvm::Value *LiteralIntegerAST::generate(EmissionContext &context) const {
   return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, this->value));
+}
+
+llvm::Value *LiteralStringAST::generate(EmissionContext &context) const {
+  // FIXME: Strings are not always size 2
+  const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
+  const auto stringType = llvm::ArrayType::get(charType, 2);
+
+  std::vector<llvm::Constant *> values;
+  values.push_back(llvm::ConstantInt::get(charType, (uint64_t)this->value.at(0)));
+  values.push_back(llvm::ConstantInt::get(charType, 0));
+  auto initializer = llvm::ConstantArray::get(stringType, values);
+
+  const auto isConstant = true;
+  auto globalVariable = new llvm::GlobalVariable(*context.module, stringType, isConstant, llvm::GlobalValue::PrivateLinkage,
+                                  initializer, ".string.literal");
+  globalVariable->setUnnamedAddr(llvm::GlobalVariable::UnnamedAddr::Global);
+  globalVariable->setAlignment(llvm::MaybeAlign(1));
+  return globalVariable;
 }
 
 llvm::Value *VariableDeclarationAST::generate(EmissionContext &context) const {
@@ -153,6 +172,64 @@ llvm::Value *FunctionCallAST::generate(EmissionContext &context) const {
   }
 
   return context.builder->CreateCall(function, argumentValues);
+}
+
+llvm::Value *ImportAST::generate(EmissionContext &context) const {
+  // FIXME: This is a blatant cheap copy of FunctionAST, which is not really maintainable
+  assert(this->name == "print");
+  // TODO: We probably don't need this scope guard here
+  auto scopeGuard = context.pushScope();
+
+  // FIXME: And this is the same problem as in Literal String AST, strings are not always size 2
+  const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
+  const auto stringType = llvm::ArrayType::get(charType, 2);
+  const auto stringPointerType = llvm::PointerType::get(charType, 0);
+  const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
+
+  std::vector<llvm::Type *> argumentTypes;
+  argumentTypes.push_back(stringType);
+
+  llvm::Type *voidType = llvm::Type::getVoidTy(*context.llvmContext);
+
+  auto functionType = llvm::FunctionType::get(voidType, argumentTypes, false);
+  auto functionName = this->name;
+  auto function =
+      llvm::Function::Create(functionType, llvm::Function::InternalLinkage, functionName, context.module.get());
+  context.addFunction(functionName, function);
+
+  auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
+  context.builder->SetInsertPoint(entryBlock);
+
+  auto argument = function->getArg(0);
+  auto textVariable = context.builder->CreateAlloca(stringPointerType, nullptr, "text");
+  context.builder->CreateStore(argument, textVariable);
+
+  // FIXME: Do the syscall
+  // call i32 asm sideeffect "syscall", "={ax},0,{di},{si},{dx},~{rcx},~{r11},~{memory},~{dirflag},~{fpsr},~{flags}"(i32
+  // 1, i32 1, i8* %0, i32 1) #1, !srcloc !2
+
+  std::vector<llvm::Type *> syscallArgumentTypes;
+  syscallArgumentTypes.push_back(i32Type);
+  syscallArgumentTypes.push_back(i32Type);
+  syscallArgumentTypes.push_back(stringPointerType);
+  syscallArgumentTypes.push_back(i32Type);
+
+  const auto syscallFunctionType = llvm::FunctionType::get(i32Type, syscallArgumentTypes, false);
+  const auto asmString = "syscall";
+  const auto constraints = "={ax},0,{di},{si},{dx},~{rcx},~{r11},~{memory},~{dirflag},~{fpsr},~{flags}";
+  const auto hasSideEffects = true;
+  llvm::InlineAsm *assemblyCall = llvm::InlineAsm::get(syscallFunctionType, asmString, constraints, hasSideEffects);
+
+  auto one = llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, 1));
+  std::vector<llvm::Value *> argumentValues = {one, one, argument, one};
+
+  auto result = context.builder->CreateCall(assemblyCall, argumentValues);
+  result->addAttribute(llvm::AttributeList::FunctionIndex, llvm::Attribute::NoUnwind);
+
+  context.builder->CreateRetVoid();
+  context.runPasses(function);
+
+  return function;
 }
 
 llvm::Value *IfAST::generate(EmissionContext &context) const {

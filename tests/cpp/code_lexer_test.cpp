@@ -379,6 +379,25 @@ TEST(CodeLexer, BoolParameter) {
   EXPECT_EQ(CodeLexer::tokenise(input), expected);
 }
 
+TEST(CodeLexer, StringLiterals) {
+  auto input = "fun function() { let x = \"Hi\"; }";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_function);
+  expected.emplace(name, "function");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(curly_open);
+  expected.emplace(keyword_let);
+  expected.emplace(name, "x");
+  expected.emplace(operator_assign);
+  expected.emplace(literal_string, "Hi");
+  expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
 TEST(CodeLexer, OperatorEquals) {
   auto input = "fun function(x: bool): bool { return x == true; }";
 
@@ -532,6 +551,23 @@ TEST(CodeLexer, LessThanOrEqualTo) {
   expected.emplace(operator_less_than_or_equal_to);
   expected.emplace(literal_integer, 2);
   expected.emplace(semicolon);
+  expected.emplace(curly_close);
+
+  EXPECT_EQ(CodeLexer::tokenise(input), expected);
+}
+
+TEST (CodeLexer, Import) {
+  auto input = "import print; fun nothing() {}";
+
+  std::queue<Token> expected;
+  expected.emplace(keyword_import);
+  expected.emplace(name, "print");
+  expected.emplace(semicolon);
+  expected.emplace(keyword_function);
+  expected.emplace(name, "nothing");
+  expected.emplace(bracket_open);
+  expected.emplace(bracket_close);
+  expected.emplace(curly_open);
   expected.emplace(curly_close);
 
   EXPECT_EQ(CodeLexer::tokenise(input), expected);

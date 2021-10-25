@@ -86,6 +86,7 @@ set(integration_tests
         tests/integration/maths_plus.baffl
         tests/integration/maths_plus_minus.baffl
         tests/integration/maths_plus_plus.baffl
+        tests/integration/print.baffl
         tests/integration/variable.baffl
         tests/integration/variable_mutable.baffl
         tests/integration/variable_scope.baffl

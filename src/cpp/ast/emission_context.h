@@ -36,7 +36,7 @@
 #include <utility>
 
 // FIXME: Remove this line, but CLion is driving me crazy
-typedef u_int64_t uint64_t;
+//typedef u_int64_t uint64_t;
 
 struct VariableReference {
   llvm::AllocaInst *value;
@@ -46,6 +46,7 @@ struct VariableReference {
 struct Scope {
   Scope *parent;
 
+  // FIXME: This is actually a copy constructor, which we DON'T want
   explicit inline Scope(Scope *parent) : parent(parent) {}
 
   void addVariable(const std::string &name, const VariableReference &alloca);

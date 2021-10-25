@@ -28,6 +28,7 @@
 #include <string>
 #include <utility>
 
+// FIXME: True and False should be literals, not keywords
 enum TokenType : uint8_t {
   noop = 0,                       // no-op
   bracket_open,                   // (
@@ -45,6 +46,7 @@ enum TokenType : uint8_t {
   operator_less_than_or_equal_to, // <=
   name,                           // name
   literal_integer,                // integer
+  literal_string,                 // "Hello world!"
   keyword_true,                   // true
   keyword_false,                  // false
   keyword_function,               // fun
@@ -53,12 +55,15 @@ enum TokenType : uint8_t {
   keyword_return,                 // return
   keyword_if,                     // if
   keyword_while,                  // while
+  keyword_import,                 // import
 };
 
 struct Token {
-  explicit Token(TokenType id) : _id(id) {}
-  Token(TokenType id, uintmax_t v) : _id(id), _value(std::to_string(v)) {}
-  Token(TokenType id, std::string v) : _id(id), _value(std::move(v)) {}
+  explicit Token(TokenType id) : _id{id} {}
+  Token(TokenType id, uintmax_t v) : _id{id}, _value{std::to_string(v)} {}
+  Token(TokenType id, std::string v) : _id{id}, _value{std::move(v)} {}
+  Token(TokenType id, const char *v) : _id{id}, _value{v} {}
+  Token(TokenType id, const std::string_view &v) : _id{id}, _value{v} {}
   ~Token() = default;
 
   [[nodiscard]] inline auto id() const { return _id; }

@@ -474,6 +474,31 @@ TEST(CodeParser, BoolParameter) {
   EXPECT_EQ(actual[0], expected);
 }
 
+TEST(CodeParser, StringLiterals) {
+  // fun function() { let x = "Hi"; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "function");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(curly_open);
+  input.emplace(keyword_let);
+  input.emplace(name, "x");
+  input.emplace(operator_assign);
+  input.emplace(literal_string, "Hi");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("function", "void") //
+                      .declareVariable("x", "Hi");
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
 TEST(CodeParser, OperatorEquals) {
   // fun function(x: bool): bool { return x == true; }
 
@@ -677,4 +702,28 @@ TEST(CodeParser, LessThanOrEqualTo) {
 
   ASSERT_EQ(actual.size(), 1);
   EXPECT_EQ(actual[0], expected);
+}
+
+TEST(CodeParser, Import) {
+  // import print; fun nothing() {}
+
+  std::queue<Token> input;
+  input.emplace(keyword_import);
+  input.emplace(name, "print");
+  input.emplace(semicolon);
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(curly_open);
+  input.emplace(curly_close);
+
+  auto expectedImport = ASTBuilder::import("print");
+  auto expectedFunction = ASTBuilder::function("main", "void");
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 2);
+  EXPECT_EQ(actual[0], expectedImport);
+  EXPECT_EQ(actual[1], expectedFunction);
 }

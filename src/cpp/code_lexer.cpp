@@ -75,6 +75,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case literal_integer:
     os << "literal: int: [" << token.valueAsString() << "]";
     break;
+  case literal_string:
+    os << "literal: string: [" << token.valueAsString() << "]";
+    break;
   case keyword_true:
     os << "keyword: true";
     break;
@@ -99,6 +102,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case keyword_while:
     os << "keyword: while";
     break;
+  case keyword_import:
+    os << "keyword: import";
+    break;
   }
   return os;
 }
@@ -122,6 +128,8 @@ inline Token fromString(const std::string_view &token) {
     return Token{keyword_true};
   } else if (token == "false") {
     return Token{keyword_false};
+  } else if (token == "import") {
+    return Token{keyword_import};
   }
 
   return {name, std::string(token)};
@@ -139,6 +147,22 @@ inline std::string_view readTokenWhile(std::basic_string_view<char> view, P pred
   }
 
   return view;
+}
+
+inline Token readStringToken(const std::string_view &content, size_t *pos) {
+  assert(content[*pos] == '"');
+  ++(*pos);
+
+  const auto start = *pos;
+
+  while (content[*pos] != '"') {
+    ++(*pos);
+  }
+
+  const auto stringContent = content.substr(start, (*pos) - start);
+  ++(*pos);
+
+  return Token{literal_string, stringContent};
 }
 
 inline Token getNext(const std::string_view &content, size_t *pos) {
@@ -207,6 +231,8 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
   case '-':
     ++(*pos);
     return Token(operator_minus);
+  case '"':
+    return readStringToken(content, pos);
   default:
     auto line = content.substr(*pos);
     auto linebreak = line.find_first_of("\r\n");

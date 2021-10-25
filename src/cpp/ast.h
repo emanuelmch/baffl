@@ -91,6 +91,19 @@ struct LiteralIntegerAST : public ExpressionAST {
     return other && this->value == other->value;
   }
 };
+struct LiteralStringAST : public ExpressionAST {
+  const std::string value;
+
+  explicit LiteralStringAST(std::string value) : value(std::move(value)) {}
+  ~LiteralStringAST() override = default;
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const LiteralStringAST *>(&o);
+    return other && this->value == other->value;
+  }
+};
 
 // Variables
 struct VariableDeclarationAST : public ExpressionAST {
@@ -173,6 +186,21 @@ struct FunctionCallAST : public ExpressionAST {
   bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionCallAST *>(&o);
     return other && this->functionName == other->functionName;
+  }
+};
+
+// Imports
+struct ImportAST : public TopLevelAST {
+  const std::string name;
+
+  explicit ImportAST(std::string name) : name(std::move(name)) {}
+  ~ImportAST() override = default;
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const ImportAST *>(&o);
+    return other && this->name == other->name;
   }
 };
 
