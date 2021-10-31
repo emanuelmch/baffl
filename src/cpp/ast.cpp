@@ -36,6 +36,7 @@ llvm::Value *LiteralIntegerAST::generate(EmissionContext &context) const {
 
 llvm::Value *LiteralStringAST::generate(EmissionContext &context) const {
   // FIXME: Strings are not always size 2
+  const auto i64Type = llvm::Type::getInt64Ty(*context.llvmContext);
   const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
   const auto stringType = llvm::ArrayType::get(charType, 2);
 
@@ -45,11 +46,14 @@ llvm::Value *LiteralStringAST::generate(EmissionContext &context) const {
   auto initializer = llvm::ConstantArray::get(stringType, values);
 
   const auto isConstant = true;
-  auto globalVariable = new llvm::GlobalVariable(*context.module, stringType, isConstant, llvm::GlobalValue::PrivateLinkage,
-                                  initializer, ".string.literal");
+  auto globalVariable = new llvm::GlobalVariable(*context.module, stringType, isConstant,
+                                                 llvm::GlobalValue::PrivateLinkage, initializer, ".string.literal");
   globalVariable->setUnnamedAddr(llvm::GlobalVariable::UnnamedAddr::Global);
   globalVariable->setAlignment(llvm::MaybeAlign(1));
-  return globalVariable;
+
+  llvm::Value *indexList[] = {llvm::ConstantInt::get(i64Type, 0), llvm::ConstantInt::get(i64Type, 0)};
+  const auto inbounds = true;
+  return llvm::ConstantExpr::getGetElementPtr(stringType, globalVariable, indexList, inbounds);
 }
 
 llvm::Value *VariableDeclarationAST::generate(EmissionContext &context) const {
@@ -182,12 +186,11 @@ llvm::Value *ImportAST::generate(EmissionContext &context) const {
 
   // FIXME: And this is the same problem as in Literal String AST, strings are not always size 2
   const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
-  const auto stringType = llvm::ArrayType::get(charType, 2);
   const auto stringPointerType = llvm::PointerType::get(charType, 0);
   const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
 
   std::vector<llvm::Type *> argumentTypes;
-  argumentTypes.push_back(stringType);
+  argumentTypes.push_back(stringPointerType);
 
   llvm::Type *voidType = llvm::Type::getVoidTy(*context.llvmContext);
 
