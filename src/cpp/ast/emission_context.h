@@ -24,6 +24,8 @@
 
 #include "helpers/raii.h"
 
+#include "ast/type_manager.h"
+
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
@@ -59,6 +61,7 @@ struct EmissionContext {
   std::shared_ptr<llvm::LLVMContext> llvmContext;
   std::shared_ptr<llvm::IRBuilder<>> builder;
   std::shared_ptr<llvm::Module> module;
+  TypeManager types;
 
   explicit EmissionContext(std::shared_ptr<llvm::LLVMContext>);
   bool runPasses(llvm::Function *);

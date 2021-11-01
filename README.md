@@ -21,7 +21,8 @@ Bill's Awesome For Funsies Language
 * _implicit_ `void` (on function return types)
 
 ## Things to do before 0.1
-* Some kind of print function
+* A better print function
+* Clean up the type usage (Move stuff into `TypeManager`)
 
 ## Things to do eventually
 * Give our `if` an `else` branch

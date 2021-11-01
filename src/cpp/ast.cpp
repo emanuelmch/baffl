@@ -22,6 +22,8 @@
 
 #include "ast.h"
 
+#include "ast/intrinsics.h"
+
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/InlineAsm.h>
@@ -187,7 +189,6 @@ llvm::Value *ImportAST::generate(EmissionContext &context) const {
   // FIXME: And this is the same problem as in Literal String AST, strings are not always size 2
   const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
   const auto stringPointerType = llvm::PointerType::get(charType, 0);
-  const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
 
   std::vector<llvm::Type *> argumentTypes;
   argumentTypes.push_back(stringPointerType);
@@ -204,30 +205,9 @@ llvm::Value *ImportAST::generate(EmissionContext &context) const {
   context.builder->SetInsertPoint(entryBlock);
 
   auto argument = function->getArg(0);
-  auto textVariable = context.builder->CreateAlloca(stringPointerType, nullptr, "text");
-  context.builder->CreateStore(argument, textVariable);
 
-  // FIXME: Do the syscall
-  // call i32 asm sideeffect "syscall", "={ax},0,{di},{si},{dx},~{rcx},~{r11},~{memory},~{dirflag},~{fpsr},~{flags}"(i32
-  // 1, i32 1, i8* %0, i32 1) #1, !srcloc !2
-
-  std::vector<llvm::Type *> syscallArgumentTypes;
-  syscallArgumentTypes.push_back(i32Type);
-  syscallArgumentTypes.push_back(i32Type);
-  syscallArgumentTypes.push_back(stringPointerType);
-  syscallArgumentTypes.push_back(i32Type);
-
-  const auto syscallFunctionType = llvm::FunctionType::get(i32Type, syscallArgumentTypes, false);
-  const auto asmString = "syscall";
-  const auto constraints = "={ax},0,{di},{si},{dx},~{rcx},~{r11},~{memory},~{dirflag},~{fpsr},~{flags}";
-  const auto hasSideEffects = true;
-  llvm::InlineAsm *assemblyCall = llvm::InlineAsm::get(syscallFunctionType, asmString, constraints, hasSideEffects);
-
-  auto one = llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, 1));
-  std::vector<llvm::Value *> argumentValues = {one, one, argument, one};
-
-  auto result = context.builder->CreateCall(assemblyCall, argumentValues);
-  result->addAttribute(llvm::AttributeList::FunctionIndex, llvm::Attribute::NoUnwind);
+  PrintSyscallIntrinsicAST syscall{argument};
+  syscall.generate(context);
 
   context.builder->CreateRetVoid();
   context.runPasses(function);

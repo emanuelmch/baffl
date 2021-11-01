@@ -40,11 +40,11 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/lib64 -lLLVM")
 # Source files
 add_library(baffl_lib
         src/cpp/ast.cpp
+        src/cpp/ast/emission_context.cpp
+        src/cpp/ast/intrinsics.cpp
         src/cpp/code_emitter.cpp
         src/cpp/code_lexer.cpp
-        src/cpp/code_parser.cpp
-        src/cpp/ast/emission_context.cpp
-        )
+        src/cpp/code_parser.cpp)
 
 add_executable(baffl
         src/cpp/main.cpp

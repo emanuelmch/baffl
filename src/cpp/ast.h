@@ -154,7 +154,9 @@ struct VariableReferenceAST : public ExpressionAST {
 // Functions
 struct FunctionAST : public TopLevelAST {
   const std::string name;
+  //TODO: Change this to a type reference
   const std::string returnTypeName;
+  //TODO: Change the second part of this to a type reference
   const std::vector<std::tuple<std::string, std::string>> arguments;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
 
