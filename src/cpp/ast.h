@@ -168,6 +168,8 @@ struct FunctionAST : public TopLevelAST {
 
   llvm::Value *generate(EmissionContext &) const override;
 
+  virtual void generateBody(EmissionContext &) const; // Overridden in Intrinsic functions
+
   inline bool operator==(const AST &o) const override {
     auto other = dynamic_cast<const FunctionAST *>(&o);
     return other && this->name == other->name && this->returnTypeName == other->returnTypeName &&

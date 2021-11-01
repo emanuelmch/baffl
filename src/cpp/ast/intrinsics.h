@@ -24,22 +24,10 @@
 
 #include "ast.h"
 
-struct PrintSyscallIntrinsicAST : public ExpressionAST {
-  explicit PrintSyscallIntrinsicAST(llvm::Value *text) : text(text) {}
-  ~PrintSyscallIntrinsicAST() override = default;
-
-  llvm::Value *generate(EmissionContext &context) const override;
-  bool operator==(const AST &o) const override {
-    auto other = dynamic_cast<const PrintSyscallIntrinsicAST *>(&o);
-    return other != nullptr;
-  }
-
-private:
-  llvm::Value *text;
-};
-
 struct PrintFunctionIntrinsicAST : public FunctionAST {
 
   explicit PrintFunctionIntrinsicAST(EmissionContext &);
   ~PrintFunctionIntrinsicAST() override = default;
+
+  void generateBody(EmissionContext &) const override;
 };

@@ -24,7 +24,7 @@
 
 #include <llvm/IR/InlineAsm.h>
 
-llvm::Value *PrintSyscallIntrinsicAST::generate(EmissionContext &context) const {
+llvm::Value *generatePrintSyscall(EmissionContext &context, llvm::Value *text) {
   const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
   const auto stringPointerType = llvm::PointerType::get(charType, 0);
   const auto i32Type = context.types.i32();
@@ -45,7 +45,7 @@ llvm::Value *PrintSyscallIntrinsicAST::generate(EmissionContext &context) const 
   const auto WRITE = one;
   const auto STDOUT = one;
   auto bytecount = one;
-  std::vector<llvm::Value *> argumentValues = {WRITE, STDOUT, this->text, bytecount};
+  std::vector<llvm::Value *> argumentValues = {WRITE, STDOUT, text, bytecount};
 
   auto result = context.builder->CreateCall(assemblyCall, argumentValues);
   result->addAttribute(llvm::AttributeList::FunctionIndex, llvm::Attribute::NoUnwind);
@@ -54,15 +54,14 @@ llvm::Value *PrintSyscallIntrinsicAST::generate(EmissionContext &context) const 
 }
 
 std::vector<std::tuple<std::string, std::string>> createPrintArguments(EmissionContext &) {
-  // FIXME:DELETE THIS stringPointer thing
-    return {{"text", "temporarystringpointer"}};
-}
-
-std::vector<std::shared_ptr<const ExpressionAST>> createPrintBody(EmissionContext &) {
-  return std::vector<std::shared_ptr<const ExpressionAST>>();
+  // FIXME: DELETE THIS temporaryStringPointer thing
+  return {{"text", "temporaryStringPointer"}};
 }
 
 PrintFunctionIntrinsicAST::PrintFunctionIntrinsicAST(EmissionContext &context)
-    : FunctionAST("print", "i32", createPrintArguments(context), createPrintBody(context)) {
+    : FunctionAST("print", "void", createPrintArguments(context), {}) {}
 
+void PrintFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
+  auto textReference = VariableReferenceAST("text").generate(context);
+  generatePrintSyscall(context, textReference);
 }

@@ -97,6 +97,11 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
     auto argumentType = std::get<1>(argument);
     if (argumentType == "i32") {
       argumentTypes.emplace_back(i32Type);
+    } else if (argumentType == "temporaryStringPointer") {
+      // FIXME: DELETE THIS temporaryStringPointer thing, it's used in PrintFunctionIntrinsicAST
+      const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
+      const auto stringPointerType = llvm::PointerType::get(charType, 0);
+      argumentTypes.emplace_back(stringPointerType);
     } else {
       assert(argumentType == "bool");
       argumentTypes.emplace_back(boolType);
@@ -131,8 +136,7 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto argumentIterator = this->arguments.cbegin();
   auto argumentTypesIterator = argumentTypes.cbegin();
 
-  // TODO: Createa a better "Type" type
-
+  // TODO: Create a better "Type" type
   while (functionArgumentIterator != function->arg_end()) {
     assert(argumentIterator != this->arguments.cend());
     assert(argumentTypesIterator != argumentTypes.cend());
@@ -151,9 +155,7 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
     ++argumentTypesIterator;
   }
 
-  for (const auto &expression : body) {
-    expression->generate(context);
-  }
+  this->generateBody(context);
 
   if (this->returnTypeName == "void") {
     if (this->name == "main") {
@@ -170,6 +172,12 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   return function;
 }
 
+void FunctionAST::generateBody(EmissionContext &context) const {
+  for (const auto &expression : body) {
+    expression->generate(context);
+  }
+}
+
 llvm::Value *FunctionCallAST::generate(EmissionContext &context) const {
   auto function = context.getFunction(this->functionName);
   std::vector<llvm::Value *> argumentValues;
@@ -181,39 +189,44 @@ llvm::Value *FunctionCallAST::generate(EmissionContext &context) const {
 }
 
 llvm::Value *ImportAST::generate(EmissionContext &context) const {
-  // FIXME: This is a blatant cheap copy of FunctionAST, which is not really maintainable
   assert(this->name == "print");
-  // TODO: We probably don't need this scope guard here
-  auto scopeGuard = context.pushScope();
-
-  // FIXME: And this is the same problem as in Literal String AST, strings are not always size 2
-  const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
-  const auto stringPointerType = llvm::PointerType::get(charType, 0);
-
-  std::vector<llvm::Type *> argumentTypes;
-  argumentTypes.push_back(stringPointerType);
-
-  llvm::Type *voidType = llvm::Type::getVoidTy(*context.llvmContext);
-
-  auto functionType = llvm::FunctionType::get(voidType, argumentTypes, false);
-  auto functionName = this->name;
-  auto function =
-      llvm::Function::Create(functionType, llvm::Function::InternalLinkage, functionName, context.module.get());
-  context.addFunction(functionName, function);
-
-  auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
-  context.builder->SetInsertPoint(entryBlock);
-
-  auto argument = function->getArg(0);
-
-  PrintSyscallIntrinsicAST syscall{argument};
-  syscall.generate(context);
-
-  context.builder->CreateRetVoid();
-  context.runPasses(function);
-
-  return function;
+  return PrintFunctionIntrinsicAST(context).generate(context);
 }
+
+// llvm::Value *ImportAST::generate(EmissionContext &context) const {
+//   // FIXME: This is a blatant cheap copy of FunctionAST, which is not really maintainable
+//   assert(this->name == "print");
+//   // TODO: We probably don't need this scope guard here
+//   auto scopeGuard = context.pushScope();
+//
+//   // FIXME: And this is the same problem as in Literal String AST, strings are not always size 2
+//   const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
+//   const auto stringPointerType = llvm::PointerType::get(charType, 0);
+//
+//   std::vector<llvm::Type *> argumentTypes;
+//   argumentTypes.push_back(stringPointerType);
+//
+//   llvm::Type *voidType = llvm::Type::getVoidTy(*context.llvmContext);
+//
+//   auto functionType = llvm::FunctionType::get(voidType, argumentTypes, false);
+//   auto functionName = this->name;
+//   auto function =
+//       llvm::Function::Create(functionType, llvm::Function::InternalLinkage, functionName, context.module.get());
+//   context.addFunction(functionName, function);
+//
+//   auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
+//   context.builder->SetInsertPoint(entryBlock);
+//
+//   auto argument = function->getArg(0);
+//
+//   PrintSyscallIntrinsicAST syscall{argument};
+//   syscall.generate(context);
+//
+//   context.builder->CreateRetVoid();
+//   context.runPasses(function);
+//
+//   return function;
+// }
 
 llvm::Value *IfAST::generate(EmissionContext &context) const {
   auto &builder = context.builder;
