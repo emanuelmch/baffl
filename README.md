@@ -24,11 +24,17 @@ Bill's Awesome For Funsies Language
 * A better print function
 * Clean up the type usage (Move stuff into `TypeManager`)
 
+## Things to do before 0.2
+* Inline functions!
+* Make function lookup mindful of the argument types, not just the function name
+* Treat basic operations (e.g. i32 + i32) as regular (inline) functions internally
+
 ## Things to do eventually
 * Give our `if` an `else` branch
 * Make our `if` and `while` more robust (it's finicky to leave blocks)
 * Stop relying on clang/libc++ (for binary initialization)
 * User-determined types
+* Uniform Function Call Syntax
 * Named & Optional arguments
 * More numbers - unsigned, negative literals, and (maybe) floating-point numbers
 * Proper error-handling instead of just `assert`ing and erroring out
