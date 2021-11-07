@@ -23,7 +23,8 @@
 #include "emission_context.h"
 
 #include <llvm/IR/Verifier.h>
-#include <llvm/Transforms/Utils.h> // llvm::createPromoteMemoryToRegisterPass
+//#include <llvm/Transforms/InstCombine/InstCombine.h> // llvm::createInstructionCombiningPass
+#include <llvm/Transforms/Utils.h> // llvm::createPromoteMemoryToRegisterPass, llvm::createLoopSimplifyPass
 
 void Scope::addVariable(const std::string &name, const VariableReference &alloca) {
   assert(variables.count(name) == 0);
@@ -44,11 +45,13 @@ const VariableReference &Scope::getVariable(const std::string &name) {
 }
 EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
     : llvmContext(std::move(context)), builder(std::make_shared<llvm::IRBuilder<>>(*llvmContext)),
-      module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), types{llvmContext}, passManager(module.get()) {
+      module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), types{llvmContext},
+      passManager(module.get()) {
   passManager.doInitialization();
-  // Promote allocas to registers.
+
   passManager.add(llvm::createPromoteMemoryToRegisterPass());
   passManager.add(llvm::createLoopSimplifyPass());
+//  passManager.add(llvm::createInstructionCombiningPass());
 }
 
 bool EmissionContext::runPasses(llvm::Function *function) {
