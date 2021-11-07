@@ -29,7 +29,6 @@ llvm::Value *generatePrintSyscall(EmissionContext &context, llvm::Value *text, l
   const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
   const auto stringPointerType = llvm::PointerType::get(charType, 0);
   const auto i32Type = context.types.i32();
-  const auto i64Type = context.types.i64();
 
   std::vector<llvm::Type *> syscallArgumentTypes;
   syscallArgumentTypes.push_back(i32Type);
@@ -43,8 +42,8 @@ llvm::Value *generatePrintSyscall(EmissionContext &context, llvm::Value *text, l
   const auto hasSideEffects = true;
   llvm::InlineAsm *assemblyCall = llvm::InlineAsm::get(syscallFunctionType, asmString, constraints, hasSideEffects);
 
-  const auto WRITE = llvm::ConstantInt::get(i64Type, 1);
-  const auto STDOUT = llvm::ConstantInt::get(i64Type, 1);
+  const auto WRITE = llvm::ConstantInt::get(i32Type, 1);
+  const auto STDOUT = llvm::ConstantInt::get(i32Type, 1);
   std::vector<llvm::Value *> argumentValues = {WRITE, STDOUT, text, length};
 
   auto result = context.builder->CreateCall(assemblyCall, argumentValues);
@@ -63,8 +62,7 @@ PrintFunctionIntrinsicAST::PrintFunctionIntrinsicAST(EmissionContext &context)
 
 void PrintFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
   auto zero = std::make_shared<LiteralIntegerAST>(0);
-  auto counter = VariableDeclarationAST{"i", zero, true}.generate(context);
-
+  VariableDeclarationAST{"i", zero, true}.generate(context);
 
   auto plus = std::make_shared<PlusOperationAST>(std::make_shared<VariableReferenceAST>("i"),
                                                  std::make_shared<LiteralIntegerAST>(1));
@@ -83,24 +81,13 @@ struct ExtractElementAST : ExpressionAST {
   ~ExtractElementAST() override = default;
 
   llvm::Value *generate(EmissionContext &context) const override {
-    const auto i64Type = context.types.i64();
     const auto charType = context.types.character();
-    const auto stringType = context.types.string();
 
-//    auto textReference = context.getVariable("text").value;
-    //    auto indexReference = context.getVariable("i").value;
     auto indexReference = VariableReferenceAST{"i"}.generate(context);
-        auto textReference = VariableReferenceAST{"text"}.generate(context);
+    auto textReference = VariableReferenceAST{"text"}.generate(context);
 
-    // return context.builder->CreateExtractElement(textReference, indexReference);
-    const auto zero = llvm::ConstantInt::get(i64Type, 0);
-//        llvm::Value *indexList[] = {zero, indexReference};
     llvm::Value *indexList[] = {indexReference};
-    //    const auto inbounds = true;
-    //    return llvm::ConstantExpr::getGetElementPtr(charType, textReference, indexList, inbounds);
-//    auto gep = llvm::GetElementPtrInst::CreateInBounds(charType, textReference, indexList);
     auto gep = context.builder->CreateGEP(textReference, indexList);
-//    auto gep2 = llvm::GetElementPtrInst::CreateInBounds(stringType, gep, indexList);
     return context.builder->CreateLoad(charType, gep, "currentChar");
   }
 
