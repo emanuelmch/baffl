@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Type.h>
 
@@ -32,7 +33,12 @@ struct TypeManager {
 public:
   explicit TypeManager(std::shared_ptr<llvm::LLVMContext> llvmContext) : llvmContext(std::move(llvmContext)) {}
 
+  // TODO: Return a Type of our own instead of LLVM's
   inline llvm::IntegerType *i32() { return llvm::Type::getInt32Ty(*llvmContext); }
+  inline llvm::IntegerType *i64() { return llvm::Type::getInt64Ty(*llvmContext); }
+  inline llvm::IntegerType *character() { return llvm::Type::getInt8Ty(*llvmContext); }
+  inline llvm::PointerType *string() { return llvm::PointerType::get(character(), 0); }
+  inline llvm::ArrayType *string(uint64_t size) { return llvm::ArrayType::get(character(), size); }
 
 private:
   std::shared_ptr<llvm::LLVMContext> llvmContext;

@@ -33,17 +33,19 @@ llvm::Value *LiteralBooleanAST::generate(EmissionContext &context) const {
 }
 
 llvm::Value *LiteralIntegerAST::generate(EmissionContext &context) const {
-  return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(32, this->value));
+  return llvm::ConstantInt::get(*context.llvmContext, llvm::APInt(length, this->value));
 }
 
 llvm::Value *LiteralStringAST::generate(EmissionContext &context) const {
-  // FIXME: Strings are not always size 2
-  const auto i64Type = llvm::Type::getInt64Ty(*context.llvmContext);
-  const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
-  const auto stringType = llvm::ArrayType::get(charType, 2);
+  const auto i64Type = context.types.i64();
+  const auto charType = context.types.character();
+  const auto stringType = context.types.string(this->value.size());
 
+  // TODO: Replace all usages of `ConstantInt::get(type` with `type.getConstant`
   std::vector<llvm::Constant *> values;
-  values.push_back(llvm::ConstantInt::get(charType, (uint64_t)this->value.at(0)));
+  for (auto c : this->value) {
+    values.push_back(llvm::ConstantInt::get(charType, (uint8_t)c));
+  }
   values.push_back(llvm::ConstantInt::get(charType, 0));
   auto initializer = llvm::ConstantArray::get(stringType, values);
 
@@ -303,6 +305,12 @@ llvm::Value *MinusOperationAST::generate(EmissionContext &context) const {
 llvm::Value *EqualsOperationAST::generate(EmissionContext &context) const {
   auto leftValue = this->left->generate(context);
   auto rightValue = this->right->generate(context);
+  if (leftValue->getType() != rightValue->getType()) {
+    auto typeA = leftValue->getType()->getTypeID();
+    auto typeB = rightValue->getType()->getTypeID();
+    assert(typeA == typeB);
+    return context.builder->CreateICmpEQ(leftValue, rightValue);
+  }
   return context.builder->CreateICmpEQ(leftValue, rightValue);
 }
 

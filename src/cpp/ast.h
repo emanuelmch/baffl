@@ -80,8 +80,10 @@ struct LiteralBooleanAST : public ExpressionAST {
 };
 struct LiteralIntegerAST : public ExpressionAST {
   const uint64_t value;
+  const uint8_t length;
 
-  explicit LiteralIntegerAST(uint64_t value) : value(value) {}
+  explicit LiteralIntegerAST(uint64_t value) : value{value}, length{32} {}
+  explicit LiteralIntegerAST(uint64_t value, uint8_t length) : value{value}, length{length} {}
   ~LiteralIntegerAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;
@@ -154,9 +156,9 @@ struct VariableReferenceAST : public ExpressionAST {
 // Functions
 struct FunctionAST : public TopLevelAST {
   const std::string name;
-  //TODO: Change this to a type reference
+  // TODO: Change this to a type reference
   const std::string returnTypeName;
-  //TODO: Change the second part of this to a type reference
+  // TODO: Change the second part of this to a type reference
   const std::vector<std::tuple<std::string, std::string>> arguments;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
 

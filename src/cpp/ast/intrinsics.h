@@ -31,3 +31,16 @@ struct PrintFunctionIntrinsicAST : public FunctionAST {
 
   void generateBody(EmissionContext &) const override;
 };
+
+struct PrintConditionIntrinsicAST : public ExpressionAST {
+
+  PrintConditionIntrinsicAST() = default;
+  ~PrintConditionIntrinsicAST() override = default;
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const PrintConditionIntrinsicAST *>(&o);
+    return other != nullptr;
+  }
+};
