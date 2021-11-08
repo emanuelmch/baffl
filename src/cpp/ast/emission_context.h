@@ -37,9 +37,6 @@
 #include <memory>
 #include <utility>
 
-// FIXME: Remove this line, but CLion is driving me crazy
-//typedef u_int64_t uint64_t;
-
 struct VariableReference {
   llvm::AllocaInst *value;
   bool isMutable;

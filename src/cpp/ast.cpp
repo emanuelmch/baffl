@@ -195,41 +195,6 @@ llvm::Value *ImportAST::generate(EmissionContext &context) const {
   return PrintFunctionIntrinsicAST(context).generate(context);
 }
 
-// llvm::Value *ImportAST::generate(EmissionContext &context) const {
-//   // FIXME: This is a blatant cheap copy of FunctionAST, which is not really maintainable
-//   assert(this->name == "print");
-//   // TODO: We probably don't need this scope guard here
-//   auto scopeGuard = context.pushScope();
-//
-//   // FIXME: And this is the same problem as in Literal String AST, strings are not always size 2
-//   const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
-//   const auto stringPointerType = llvm::PointerType::get(charType, 0);
-//
-//   std::vector<llvm::Type *> argumentTypes;
-//   argumentTypes.push_back(stringPointerType);
-//
-//   llvm::Type *voidType = llvm::Type::getVoidTy(*context.llvmContext);
-//
-//   auto functionType = llvm::FunctionType::get(voidType, argumentTypes, false);
-//   auto functionName = this->name;
-//   auto function =
-//       llvm::Function::Create(functionType, llvm::Function::InternalLinkage, functionName, context.module.get());
-//   context.addFunction(functionName, function);
-//
-//   auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
-//   context.builder->SetInsertPoint(entryBlock);
-//
-//   auto argument = function->getArg(0);
-//
-//   PrintSyscallIntrinsicAST syscall{argument};
-//   syscall.generate(context);
-//
-//   context.builder->CreateRetVoid();
-//   context.runPasses(function);
-//
-//   return function;
-// }
-
 llvm::Value *IfAST::generate(EmissionContext &context) const {
   auto &builder = context.builder;
   auto conditionValue = this->condition->generate(context);
