@@ -31,9 +31,10 @@ void Scope::addVariable(const std::string &name, const VariableReference &alloca
   variables.emplace(name, alloca);
 }
 
-const VariableReference &Scope::getVariable(const std::string &name) {
-  if (variables.find(name) != variables.end()) {
-    return variables[name];
+const VariableReference &Scope::getVariable(const std::string &name) const {
+  auto variable = variables.find(name);
+  if (variable != variables.end()) {
+    return variable->second;
   }
 
   if (parent == nullptr) {

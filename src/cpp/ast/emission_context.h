@@ -43,13 +43,14 @@ struct VariableReference {
 };
 
 struct Scope {
-  Scope *parent;
+  Scope *const parent;
 
-  // FIXME: This is actually a copy constructor, which we DON'T want
+  explicit inline Scope(Scope &) = delete;
   explicit inline Scope(Scope *parent) : parent(parent) {}
 
   void addVariable(const std::string &name, const VariableReference &alloca);
-  const VariableReference &getVariable(const std::string &name);
+  [[nodiscard]] const VariableReference &getVariable(const std::string &name) const;
+
 private:
   std::map<std::string, const VariableReference> variables;
 };
