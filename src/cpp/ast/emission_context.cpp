@@ -46,17 +46,21 @@ const VariableReference &Scope::getVariable(const std::string &name) const {
 }
 EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
     : llvmContext(std::move(context)), builder(std::make_shared<llvm::IRBuilder<>>(*llvmContext)),
-      module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), types{llvmContext},
-      passManager(module.get()) {
+      module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), types{llvmContext} {}
+
+void EmissionContext::runPasses(llvm::Function *function) {
+  auto verifyFailed = llvm::verifyFunction(*function, &llvm::errs());
+  if (verifyFailed) {
+    std::cerr << "Function verification failed" << std::endl;
+    std::exit(1);
+  }
+
+  llvm::legacy::FunctionPassManager passManager{module.get()};
   passManager.doInitialization();
 
   passManager.add(llvm::createPromoteMemoryToRegisterPass());
   passManager.add(llvm::createLoopSimplifyPass());
-//  passManager.add(llvm::createInstructionCombiningPass());
-}
+  // passManager.add(llvm::createInstructionCombiningPass());
 
-bool EmissionContext::runPasses(llvm::Function *function) {
-  auto verifyFailed = llvm::verifyFunction(*function, &llvm::errs());
-  auto runFailed = passManager.run(*function);
-  return verifyFailed || runFailed;
+  passManager.run(*function);
 }
