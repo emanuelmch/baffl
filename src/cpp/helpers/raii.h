@@ -27,8 +27,8 @@
 
 struct RunnerScopeGuard {
   explicit RunnerScopeGuard(std::function<void()> function) : function(std::move(function)) {}
-  ~RunnerScopeGuard() { function(); }
+  inline ~RunnerScopeGuard() { function(); }
 
 private:
-  std::function<void()> function;
+  const std::function<void()> function;
 };
