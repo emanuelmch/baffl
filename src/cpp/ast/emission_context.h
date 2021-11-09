@@ -62,6 +62,16 @@ struct EmissionContext {
   TypeManager types;
 
   explicit EmissionContext(std::shared_ptr<llvm::LLVMContext>);
+#ifdef NDEBUG
+  ~EmissionContext() = default;
+#else
+  ~EmissionContext() {
+    // We should have "pulled" out all scopes by the time we're getting destroyed
+    assert(this->scope == nullptr);
+    assert(this->currentLevel == 0);
+  }
+#endif
+
   bool runPasses(llvm::Function *);
 
   inline RunnerScopeGuard pushScope() {
@@ -69,8 +79,11 @@ struct EmissionContext {
     this->scope = new Scope{this->scope};
     return RunnerScopeGuard{[this, level] {
       assert(currentLevel == level);
+      auto oldScope = scope;
       scope = scope->parent;
       currentLevel--;
+
+      delete oldScope;
     }};
   }
 
