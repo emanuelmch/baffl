@@ -26,14 +26,13 @@
 #include <llvm/IR/Instructions.h>
 
 llvm::Value *generatePrintSyscall(EmissionContext &context, llvm::Value *text, llvm::Value *length) {
-  const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
-  const auto stringPointerType = llvm::PointerType::get(charType, 0);
+  const auto stringType = context.types.string();
   const auto i32Type = context.types.i32();
 
   std::vector<llvm::Type *> syscallArgumentTypes;
   syscallArgumentTypes.push_back(i32Type);
   syscallArgumentTypes.push_back(i32Type);
-  syscallArgumentTypes.push_back(stringPointerType);
+  syscallArgumentTypes.push_back(stringType);
   syscallArgumentTypes.push_back(i32Type);
 
   const auto syscallFunctionType = llvm::FunctionType::get(i32Type, syscallArgumentTypes, false);
