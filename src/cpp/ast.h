@@ -130,10 +130,10 @@ struct VariableAssignmentAST : public ExpressionAST {
   const std::string varName;
   const std::shared_ptr<ExpressionAST> value;
 
-  VariableAssignmentAST(std::string varName, std::shared_ptr<ExpressionAST> value)
-      : variable{nullptr}, varName{std::move(varName)}, value{std::move(value)} {}
   VariableAssignmentAST(llvm::Value *variable, std::shared_ptr<ExpressionAST> value)
       : variable{variable}, varName{}, value{std::move(value)} {}
+  VariableAssignmentAST(std::string varName, std::shared_ptr<ExpressionAST> value)
+      : variable{nullptr}, varName{std::move(varName)}, value{std::move(value)} {}
 
   llvm::Value *generate(EmissionContext &) const override;
 
@@ -144,9 +144,14 @@ struct VariableAssignmentAST : public ExpressionAST {
 };
 
 struct VariableReferenceAST : public ExpressionAST {
+  llvm::Value *const variable;
   const std::string varName;
+  const std::string loadName;
 
-  explicit VariableReferenceAST(std::string varName) : varName(std::move(varName)) {}
+  explicit VariableReferenceAST(llvm::Value *variable, std::string loadName = {})
+      : variable{variable}, varName{}, loadName{std::move(loadName)} {}
+  explicit VariableReferenceAST(std::string varName, std::string loadName = {})
+      : variable{nullptr}, varName{std::move(varName)}, loadName{std::move(loadName)} {}
 
   llvm::Value *generate(EmissionContext &) const override;
 

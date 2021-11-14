@@ -90,10 +90,16 @@ llvm::Value *VariableAssignmentAST::generate(EmissionContext &context) const {
 }
 
 llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
-  auto variable = context.getVariable(this->varName);
-  auto variableType = variable.value->getType()->getPointerElementType();
+  llvm::Value *reference;
 
-  return context.builder->CreateLoad(variableType, variable.value);
+  if (variable != nullptr) {
+    reference = variable;
+  } else {
+    reference = context.getVariable(this->varName).value;
+  }
+  auto variableType = reference->getType()->getPointerElementType();
+
+  return context.builder->CreateLoad(variableType, reference, loadName);
 }
 
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {

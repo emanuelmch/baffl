@@ -80,7 +80,6 @@ struct ExtractCharFromStringAST : ExpressionAST {
   ~ExtractCharFromStringAST() override = default;
 
   llvm::Value *generate(EmissionContext &context) const override {
-    const auto charType = context.types.character();
     const auto stringType = context.types.string();
 
     auto indexReference = VariableReferenceAST{"i"}.generate(context);
@@ -88,7 +87,7 @@ struct ExtractCharFromStringAST : ExpressionAST {
 
     llvm::Value *indexList[] = {indexReference};
     auto gep = context.builder->CreateGEP(stringType->getPointerElementType(), textReference, indexList);
-    return context.builder->CreateLoad(charType, gep, "currentChar");
+    return VariableReferenceAST{gep, "currentChar"}.generate(context);
   }
 
   bool operator==(const AST &o) const override {
