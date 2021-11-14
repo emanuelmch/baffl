@@ -62,11 +62,11 @@ PrintFunctionIntrinsicAST::PrintFunctionIntrinsicAST(EmissionContext &context)
 
 void PrintFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
   auto zero = std::make_shared<LiteralIntegerAST>(0);
-  VariableDeclarationAST{"i", zero, true}.generate(context);
+  auto index = VariableDeclarationAST{"i", zero, true}.generate(context);
 
   auto plus = std::make_shared<PlusOperationAST>(std::make_shared<VariableReferenceAST>("i"),
                                                  std::make_shared<LiteralIntegerAST>(1));
-  auto counterIncrement = std::make_shared<VariableAssignmentAST>("i", plus);
+  auto counterIncrement = std::make_shared<VariableAssignmentAST>(index, plus);
 
   auto conditionAST = std::make_shared<PrintConditionIntrinsicAST>();
   WhileAST{conditionAST, {counterIncrement}}.generate(context);

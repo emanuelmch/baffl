@@ -75,12 +75,18 @@ llvm::Value *VariableDeclarationAST::generate(EmissionContext &context) const {
 }
 
 llvm::Value *VariableAssignmentAST::generate(EmissionContext &context) const {
-  auto lhs = context.getVariable(this->varName);
-  assert(lhs.isMutable);
+  llvm::Value *lhs;
+
+  if (variable != nullptr) {
+    lhs = variable;
+  } else {
+    auto reference = context.getVariable(this->varName);
+    assert(reference.isMutable);
+    lhs = reference.value;
+  }
 
   auto rhs = this->value->generate(context);
-
-  return context.builder->CreateStore(rhs, lhs.value);
+  return context.builder->CreateStore(rhs, lhs);
 }
 
 llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
