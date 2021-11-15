@@ -38,8 +38,10 @@
 #include <utility>
 
 struct VariableReference {
+  const std::string name;
+  const llvm::Type *type;
   llvm::AllocaInst *value;
-  bool isMutable;
+  const bool isMutable;
 };
 
 struct Scope {
@@ -48,10 +50,11 @@ struct Scope {
   explicit inline Scope(Scope &) = delete;
   explicit inline Scope(Scope *parent) : parent(parent) {}
 
-  void addVariable(const std::string &name, const VariableReference &alloca);
+  void addVariable(const VariableReference &alloca);
   [[nodiscard]] const VariableReference &getVariable(const std::string &name) const;
 
 private:
+  // TODO: Shuold be safe to change this to string_view
   std::map<std::string, const VariableReference> variables;
 };
 
@@ -87,9 +90,9 @@ struct EmissionContext {
     }};
   }
 
-  inline void addVariable(const std::string &name, const VariableReference &alloca) {
+  inline void addVariable(const VariableReference &alloca) {
     assert(scope != nullptr);
-    scope->addVariable(name, alloca);
+    scope->addVariable(alloca);
   }
 
   inline const VariableReference &getVariable(const std::string &name) {

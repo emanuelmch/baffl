@@ -63,12 +63,17 @@ llvm::Value *LiteralStringAST::generate(EmissionContext &context) const {
 llvm::Value *VariableDeclarationAST::generate(EmissionContext &context) const {
   auto function = context.builder->GetInsertBlock()->getParent();
 
-  llvm::IRBuilder<> entryBuilder(&function->getEntryBlock(), function->getEntryBlock().begin());
-  auto alloca = entryBuilder.CreateAlloca(llvm::Type::getInt32Ty(*context.llvmContext), nullptr, this->varName);
-  context.addVariable(this->varName, {alloca, this->isMutable});
-
   assert(this->value);
   auto initialValue = this->value->generate(context);
+
+  // TODO: Allow variable declarations to be non-inferred
+  auto type = initialValue->getType();
+
+  llvm::IRBuilder<> entryBuilder(&function->getEntryBlock(), function->getEntryBlock().begin());
+  auto alloca = entryBuilder.CreateAlloca(type, nullptr, this->varName);
+
+  context.addVariable({varName, type, alloca, isMutable});
+
   context.builder->CreateStore(initialValue, alloca);
 
   return alloca;
@@ -180,9 +185,10 @@ llvm::Value *FunctionAST::generateUsingArguments(EmissionContext &context,
     functionArgument.setName(argumentName);
 
     // TODO: Could we use a VariableRefAST instead of copying the code?
-    auto alloca = context.builder->CreateAlloca(*argumentTypesIterator, nullptr, argumentName);
+    auto argumentType = *argumentTypesIterator;
+    auto alloca = context.builder->CreateAlloca(argumentType, nullptr, argumentName);
     context.builder->CreateStore(&functionArgument, alloca);
-    context.addVariable(argumentName, {alloca, false});
+    context.addVariable({argumentName, argumentType, alloca, false});
 
     ++functionArgumentIterator;
     ++argumentIterator;

@@ -1,6 +1,10 @@
 # BAFFL
 Bill's Awesome For Funsies Language
 
+## Interesting Design decisions
+* Precedence of operators is always left to right
+* Function arguments are always immutable (until I figure out how to do in/out arguments)
+
 ## Current state
 
 ### General features
@@ -38,11 +42,11 @@ Bill's Awesome For Funsies Language
 
 ## Things to do eventually
 * Give our `if` an `else` branch
-* Make our `if` and `while` more robust (it's finicky to leave blocks)
+* Make our `if` and `while` more robust (leaving blocks is a bit finicky)
 * Stop relying on clang/libc++ (for binary initialization)
 * Decide on how to do multi-module (i.e. something like `import` or `include`)
 * User-determined types
 * Uniform Function Call Syntax
 * Named & Optional arguments
-* More numbers - unsigned, negative literals, and (maybe) floating-point numbers
+* More numbers - unsigned, negative, and floating-point numbers
 * Proper error-handling instead of just `assert`ing and erroring out

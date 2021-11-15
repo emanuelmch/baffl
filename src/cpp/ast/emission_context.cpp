@@ -26,9 +26,9 @@
 //#include <llvm/Transforms/InstCombine/InstCombine.h> // llvm::createInstructionCombiningPass
 #include <llvm/Transforms/Utils.h> // llvm::createPromoteMemoryToRegisterPass, llvm::createLoopSimplifyPass
 
-void Scope::addVariable(const std::string &name, const VariableReference &alloca) {
-  assert(variables.count(name) == 0);
-  variables.emplace(name, alloca);
+void Scope::addVariable(const VariableReference &alloca) {
+  assert(variables.count(alloca.name) == 0);
+  variables.emplace(alloca.name, alloca);
 }
 
 const VariableReference &Scope::getVariable(const std::string &name) const {
