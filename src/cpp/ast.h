@@ -166,14 +166,22 @@ struct FunctionAST : public TopLevelAST {
   const std::string name;
   // TODO: Change this to a type reference
   const std::string returnTypeName;
-  // TODO: Change the second part of this to a type reference
-  const std::vector<std::tuple<std::string, std::string>> arguments;
+  // TODO: Delete fakeArguments and rename the real ones to just "arguments"
+  const std::vector<std::tuple<std::string, llvm::Type *>> realArguments;
+  const std::vector<std::tuple<std::string, std::string>> fakeArguments;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
 
-  FunctionAST(std::string name, std::string returnTypeName, std::vector<std::tuple<std::string, std::string>> arguments,
+  FunctionAST(std::string name, std::string returnTypeName,
+              std::vector<std::tuple<std::string, llvm::Type *>> arguments,
               std::vector<std::shared_ptr<const ExpressionAST>> body)
-      : name(std::move(name)), returnTypeName(std::move(returnTypeName)), arguments(std::move(arguments)),
-        body(std::move(body)) {}
+      : name{std::move(name)}, returnTypeName{std::move(returnTypeName)}, realArguments{std::move(arguments)},
+        fakeArguments{}, body{std::move(body)} {}
+
+  [[deprecated("Use the version that takes TypeReference instead")]] FunctionAST(
+      std::string name, std::string returnTypeName, std::vector<std::tuple<std::string, std::string>> arguments,
+      std::vector<std::shared_ptr<const ExpressionAST>> body)
+      : name{std::move(name)}, returnTypeName{std::move(returnTypeName)}, realArguments{},
+        fakeArguments{std::move(arguments)}, body{std::move(body)} {}
   ~FunctionAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;
@@ -185,6 +193,10 @@ struct FunctionAST : public TopLevelAST {
     return other && this->name == other->name && this->returnTypeName == other->returnTypeName &&
            compareBodies(this->body, other->body);
   }
+
+private:
+  // TODO: Delete this function after we delete the fakeArguments
+  llvm::Value *generateUsingArguments(EmissionContext &, std::vector<std::tuple<std::string, llvm::Type *>>) const;
 };
 
 struct FunctionCallAST : public ExpressionAST {

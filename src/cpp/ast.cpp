@@ -103,6 +103,34 @@ llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
 }
 
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {
+  if (realArguments.empty() == false) {
+    return generateUsingArguments(context, realArguments);
+  }
+
+  const auto boolType = llvm::Type::getInt1Ty(*context.llvmContext);
+  const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
+  const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
+  const auto stringPointerType = llvm::PointerType::get(charType, 0);
+
+  std::vector<std::tuple<std::string, llvm::Type *>> arguments;
+  for (auto argument : fakeArguments) {
+    auto argumentName = std::get<0>(argument);
+    auto argumentType = std::get<1>(argument);
+    if (argumentType == "i32") {
+      arguments.emplace_back(argumentName, i32Type);
+    } else if (argumentType == "temporaryStringPointer") {
+      arguments.emplace_back(argumentName, stringPointerType);
+    } else {
+      assert(argumentType == "bool");
+      arguments.emplace_back(argumentName, boolType);
+    }
+  }
+
+  return generateUsingArguments(context, arguments);
+}
+
+llvm::Value *FunctionAST::generateUsingArguments(EmissionContext &context,
+                                                 std::vector<std::tuple<std::string, llvm::Type *>> arguments) const {
   auto scopeGuard = context.pushScope();
 
   const auto boolType = llvm::Type::getInt1Ty(*context.llvmContext);
@@ -111,17 +139,7 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   std::vector<llvm::Type *> argumentTypes;
   for (auto argument : arguments) {
     auto argumentType = std::get<1>(argument);
-    if (argumentType == "i32") {
-      argumentTypes.emplace_back(i32Type);
-    } else if (argumentType == "temporaryStringPointer") {
-      // FIXME: DELETE THIS temporaryStringPointer thing, it's used in PrintFunctionIntrinsicAST
-      const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
-      const auto stringPointerType = llvm::PointerType::get(charType, 0);
-      argumentTypes.emplace_back(stringPointerType);
-    } else {
-      assert(argumentType == "bool");
-      argumentTypes.emplace_back(boolType);
-    }
+    argumentTypes.push_back(argumentType);
   }
 
   // TODO: Move the void main magic elsewhere? Maybe?
@@ -149,12 +167,12 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   context.builder->SetInsertPoint(entryBlock);
 
   auto functionArgumentIterator = function->arg_begin();
-  auto argumentIterator = this->arguments.cbegin();
+  auto argumentIterator = arguments.cbegin();
   auto argumentTypesIterator = argumentTypes.cbegin();
 
   // TODO: Create a better "Type" type
   while (functionArgumentIterator != function->arg_end()) {
-    assert(argumentIterator != this->arguments.cend());
+    assert(argumentIterator != arguments.cend());
     assert(argumentTypesIterator != argumentTypes.cend());
 
     auto &functionArgument = (*functionArgumentIterator);
