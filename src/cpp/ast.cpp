@@ -108,44 +108,10 @@ llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
 }
 
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {
-  if (realArguments.empty() == false) {
-    return generateUsingArguments(context, realArguments);
-  }
-
-  const auto boolType = llvm::Type::getInt1Ty(*context.llvmContext);
-  const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
-  const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
-  const auto stringPointerType = llvm::PointerType::get(charType, 0);
-
-  std::vector<std::tuple<std::string, llvm::Type *>> arguments;
-  for (auto argument : fakeArguments) {
-    auto argumentName = std::get<0>(argument);
-    auto argumentType = std::get<1>(argument);
-    if (argumentType == "i32") {
-      arguments.emplace_back(argumentName, i32Type);
-    } else if (argumentType == "temporaryStringPointer") {
-      arguments.emplace_back(argumentName, stringPointerType);
-    } else {
-      assert(argumentType == "bool");
-      arguments.emplace_back(argumentName, boolType);
-    }
-  }
-
-  return generateUsingArguments(context, arguments);
-}
-
-llvm::Value *FunctionAST::generateUsingArguments(EmissionContext &context,
-                                                 std::vector<std::tuple<std::string, llvm::Type *>> arguments) const {
   auto scopeGuard = context.pushScope();
 
   const auto boolType = llvm::Type::getInt1Ty(*context.llvmContext);
   const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
-
-  std::vector<llvm::Type *> argumentTypes;
-  for (auto argument : arguments) {
-    auto argumentType = std::get<1>(argument);
-    argumentTypes.push_back(argumentType);
-  }
 
   // TODO: Move the void main magic elsewhere? Maybe?
   if (this->name == "main") {
@@ -162,6 +128,22 @@ llvm::Value *FunctionAST::generateUsingArguments(EmissionContext &context,
     returnType = llvm::Type::getVoidTy(*context.llvmContext);
   }
 
+  std::vector<llvm::Type *> argumentTypes;
+  for (auto argument : fakeArguments) {
+    auto argumentType = std::get<1>(argument);
+    if (argumentType == "i32") {
+      argumentTypes.emplace_back(i32Type);
+    } else if (argumentType == "temporaryStringPointer") {
+      // FIXME: DELETE THIS temporaryStringPointer thing, it's used in PrintFunctionIntrinsicAST
+      const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
+      const auto stringPointerType = llvm::PointerType::get(charType, 0);
+      argumentTypes.emplace_back(stringPointerType);
+    } else {
+      assert(argumentType == "bool");
+      argumentTypes.emplace_back(boolType);
+    }
+  }
+
   auto functionType = llvm::FunctionType::get(returnType, argumentTypes, false);
   auto functionName = this->name;
   auto function =
@@ -171,28 +153,20 @@ llvm::Value *FunctionAST::generateUsingArguments(EmissionContext &context,
   auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
   context.builder->SetInsertPoint(entryBlock);
 
-  auto functionArgumentIterator = function->arg_begin();
-  auto argumentIterator = arguments.cbegin();
-  auto argumentTypesIterator = argumentTypes.cbegin();
+  std::vector<VariableReference> arguments;
 
-  // TODO: Create a better "Type" type
-  while (functionArgumentIterator != function->arg_end()) {
-    assert(argumentIterator != arguments.cend());
-    assert(argumentTypesIterator != argumentTypes.cend());
+  if (realArguments.empty() == false) {
+    arguments = realArguments;
+  } else if (fakeArguments.empty() == false) {
+    arguments = generateRealArguments(function, argumentTypes);
+  }
 
-    auto &functionArgument = (*functionArgumentIterator);
-    auto argumentName = std::get<0>(*argumentIterator);
-    functionArgument.setName(argumentName);
+  for (const auto &argument : arguments) {
+    auto alloca = context.builder->CreateAlloca(argument.type, nullptr, argument.name);
+    context.builder->CreateStore(argument.value, alloca);
 
-    // TODO: Could we use a VariableRefAST instead of copying the code?
-    auto argumentType = *argumentTypesIterator;
-    auto alloca = context.builder->CreateAlloca(argumentType, nullptr, argumentName);
-    context.builder->CreateStore(&functionArgument, alloca);
-    context.addVariable({argumentName, argumentType, alloca, false});
-
-    ++functionArgumentIterator;
-    ++argumentIterator;
-    ++argumentTypesIterator;
+    VariableReference ref{argument.name, argument.type, alloca, false};
+    context.addVariable(ref);
   }
 
   this->generateBody(context);
@@ -210,6 +184,38 @@ llvm::Value *FunctionAST::generateUsingArguments(EmissionContext &context,
   context.runPasses(function);
 
   return function;
+}
+
+std::vector<VariableReference>
+FunctionAST::generateRealArguments(llvm::Function *function, const std::vector<llvm::Type *> &argumentTypes) const {
+  std::vector<VariableReference> result;
+
+  auto functionArgumentIterator = function->arg_begin();
+  auto argumentIterator = this->fakeArguments.cbegin();
+  auto argumentTypesIterator = argumentTypes.cbegin();
+
+  // TODO: Create a better "Type" type
+  while (functionArgumentIterator != function->arg_end()) {
+    assert(argumentIterator != this->fakeArguments.cend());
+    assert(argumentTypesIterator != argumentTypes.cend());
+
+    auto &functionArgument = (*functionArgumentIterator);
+    const auto &argumentName = std::get<0>(*argumentIterator);
+    const auto &argumentType = *argumentTypesIterator;
+
+    functionArgument.setName(argumentName);
+
+    VariableReference ref{argumentName, argumentType, &functionArgument, false};
+    result.push_back(ref);
+    // TODO: Discover why doesn't this emplace_back work
+    // result.emplace_back(argumentName, argumentType, &functionArgument, false);
+
+    ++functionArgumentIterator;
+    ++argumentIterator;
+    ++argumentTypesIterator;
+  }
+
+  return result;
 }
 
 void FunctionAST::generateBody(EmissionContext &context) const {

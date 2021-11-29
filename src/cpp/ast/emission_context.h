@@ -37,11 +37,12 @@
 #include <memory>
 #include <utility>
 
+// TODO: name and isMutable should be const
 struct VariableReference {
-  const std::string name;
-  const llvm::Type *type;
-  llvm::AllocaInst *value;
-  const bool isMutable;
+  std::string name;
+  llvm::Type *type;
+  llvm::Value *value;
+  bool isMutable;
 };
 
 struct Scope {
@@ -54,7 +55,7 @@ struct Scope {
   [[nodiscard]] const VariableReference &getVariable(const std::string &name) const;
 
 private:
-  // TODO: Shuold be safe to change this to string_view
+  // TODO: Should be safe to change this to string_view
   std::map<std::string, const VariableReference> variables;
 };
 

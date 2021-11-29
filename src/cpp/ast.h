@@ -167,17 +167,16 @@ struct FunctionAST : public TopLevelAST {
   // TODO: Change this to a type reference
   const std::string returnTypeName;
   // TODO: Delete fakeArguments and rename the real ones to just "arguments"
-  const std::vector<std::tuple<std::string, llvm::Type *>> realArguments;
+  const std::vector<VariableReference> realArguments;
   const std::vector<std::tuple<std::string, std::string>> fakeArguments;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
 
-  FunctionAST(std::string name, std::string returnTypeName,
-              std::vector<std::tuple<std::string, llvm::Type *>> arguments,
+  FunctionAST(std::string name, std::string returnTypeName, std::vector<VariableReference> arguments,
               std::vector<std::shared_ptr<const ExpressionAST>> body)
       : name{std::move(name)}, returnTypeName{std::move(returnTypeName)}, realArguments{std::move(arguments)},
         fakeArguments{}, body{std::move(body)} {}
 
-  [[deprecated("Use the version that takes TypeReference instead")]] FunctionAST(
+  [[deprecated("Use the version that takes VariableReference instead")]] FunctionAST(
       std::string name, std::string returnTypeName, std::vector<std::tuple<std::string, std::string>> arguments,
       std::vector<std::shared_ptr<const ExpressionAST>> body)
       : name{std::move(name)}, returnTypeName{std::move(returnTypeName)}, realArguments{},
@@ -196,7 +195,7 @@ struct FunctionAST : public TopLevelAST {
 
 private:
   // TODO: Delete this function after we delete the fakeArguments
-  llvm::Value *generateUsingArguments(EmissionContext &, std::vector<std::tuple<std::string, llvm::Type *>>) const;
+  std::vector<VariableReference> generateRealArguments(llvm::Function *, const std::vector<llvm::Type *> &) const;
 };
 
 struct FunctionCallAST : public ExpressionAST {
@@ -276,7 +275,7 @@ struct ReturnAST : public ExpressionAST {
     return other && *(this->value) == *(other->value);
   }
 
-  bool isTerminator() const override { return true; }
+  [[nodiscard]] bool isTerminator() const override { return true; }
 };
 
 // TODO: Should we replace all these with a "BinaryOperationAST"?

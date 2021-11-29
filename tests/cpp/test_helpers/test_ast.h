@@ -165,8 +165,8 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
 void PrintTo(const FunctionAST &functionAST, std::ostream *os) {
   *os << "FunctionAST { " << functionAST.name << ": " << functionAST.returnTypeName << ", arguments { ";
   for (const auto &argument : functionAST.realArguments) {
-    const auto &[name, type] = argument;
-    *os << name << ": " << type << ", ";
+    const auto &[name, type, value, isMutable] = argument;
+    *os << name << ": " << (isMutable ? "Mut " : "") << type << ", ";
   }
   *os << "}, expressions[" << functionAST.body.size() << "]: { ";
   for (const auto &expression : functionAST.body) {
