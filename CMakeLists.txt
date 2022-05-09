@@ -29,14 +29,20 @@ if (NOT CMAKE_CXX_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     #TODO: Do we, though?
 endif ()
 
+# Add LLVM Dependency
+find_package(LLVM REQUIRED CONFIG PATHS ./libs/llvm/build NO_DEFAULT_PATH)
+include_directories(${LLVM_INCLUDE_DIRS})
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS_LIST})
+llvm_map_components_to_libnames(llvm_libs X86)
+
 # Compiler flags
 set(CMAKE_CXX_STANDARD 17)
-add_compile_options(-march=native -fno-exceptions)
+add_compile_options(-march=native -fno-exceptions --system-header-prefix=llvm/)
 #add_compile_options(-Wno-unused-command-line-argument -Xlinker --export-dynamic) I think we'll need this someday
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -omit-frame-pointer")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror -Wall -Wextra -Wno-missing-braces -Wsign-conversion")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-deprecated-declarations")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L/usr/lib64 -lLLVM")
 
 # Source files
 add_library(baffl_lib
@@ -45,13 +51,15 @@ add_library(baffl_lib
         src/cpp/ast/intrinsics.cpp
         src/cpp/code_emitter.cpp
         src/cpp/code_lexer.cpp
-        src/cpp/code_parser.cpp)
+        src/cpp/code_parser.cpp
+        )
 
 add_executable(baffl
         src/cpp/main.cpp
         src/cpp/helpers/file_reader.cpp
         $<TARGET_OBJECTS:baffl_lib>
         )
+target_link_libraries(baffl ${llvm_libs})
 
 # Testing
 enable_testing()
@@ -66,11 +74,10 @@ set(unit_tests
 foreach (unit_test_file ${unit_tests})
     get_filename_component(unit_test_name ${unit_test_file} NAME_WE)
     add_executable(${unit_test_name} ${unit_test_file} $<TARGET_OBJECTS:baffl_lib>)
-    target_link_libraries(${unit_test_name} gtest gtest_main pthread)
+    target_link_libraries(${unit_test_name} gtest gtest_main pthread ${llvm_libs})
 
     add_test(${unit_test_name} ${unit_test_name})
 endforeach (unit_test_file)
-
 
 # Integration tests
 set(integration_tests
