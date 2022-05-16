@@ -57,7 +57,7 @@ std::vector<std::tuple<std::string, std::string>> createPrintArguments(EmissionC
 }
 
 PrintFunctionIntrinsicAST::PrintFunctionIntrinsicAST(EmissionContext &context)
-    : FunctionAST("print", "void", createPrintArguments(context), {}) {}
+    : FunctionAST("print", "void", createPrintArguments(context), {}, {FunctionAttribute::Inline}) {}
 
 void PrintFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
   auto zero = std::make_shared<LiteralIntegerAST>(0);

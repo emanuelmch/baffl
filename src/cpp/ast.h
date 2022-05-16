@@ -23,10 +23,12 @@
 #pragma once
 
 #include "ast/emission_context.h"
+#include "ast/function_attributes.h"
 #include "code_lexer.h"
 
 #include <llvm/IR/Value.h>
 
+#include <unordered_set>
 #include <utility>
 
 // Interfaces
@@ -170,6 +172,7 @@ struct FunctionAST : public TopLevelAST {
   const std::vector<VariableReference> realArguments;
   const std::vector<std::tuple<std::string, std::string>> fakeArguments;
   const std::vector<std::shared_ptr<const ExpressionAST>> body;
+  const std::unordered_set<FunctionAttribute> attributes;
 
   FunctionAST(std::string name, std::string returnTypeName, std::vector<VariableReference> arguments,
               std::vector<std::shared_ptr<const ExpressionAST>> body)
@@ -178,9 +181,9 @@ struct FunctionAST : public TopLevelAST {
 
   [[deprecated("Use the version that takes VariableReference instead")]] FunctionAST(
       std::string name, std::string returnTypeName, std::vector<std::tuple<std::string, std::string>> arguments,
-      std::vector<std::shared_ptr<const ExpressionAST>> body)
+      std::vector<std::shared_ptr<const ExpressionAST>> body, std::unordered_set<FunctionAttribute> attributes = {})
       : name{std::move(name)}, returnTypeName{std::move(returnTypeName)}, realArguments{},
-        fakeArguments{std::move(arguments)}, body{std::move(body)} {}
+        fakeArguments{std::move(arguments)}, body{std::move(body)}, attributes{std::move(attributes)} {}
   ~FunctionAST() override = default;
 
   llvm::Value *generate(EmissionContext &) const override;

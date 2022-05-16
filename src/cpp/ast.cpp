@@ -149,12 +149,10 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto function =
       llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, functionName, context.module.get());
 
-  //FIXME: Only add this attribute to functions that actually want it
-  if (functionName == "print") {
+  if (this->attributes.find(FunctionAttribute::Inline) != attributes.end()) {
     function->addAttribute(llvm::AttributeList::FunctionIndex, llvm::Attribute::AlwaysInline);
   }
   context.addFunction(functionName, function);
-
 
   std::vector<VariableReference> arguments;
   if (realArguments.empty() == false) {
