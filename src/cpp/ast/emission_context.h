@@ -76,8 +76,6 @@ struct EmissionContext {
   }
 #endif
 
-  void runPasses(llvm::Function *);
-
   inline RunnerScopeGuard pushScope() {
     auto level = ++currentLevel;
     this->scope = new Scope{this->scope};

@@ -22,7 +22,10 @@
 
 #include "code_emitter.h"
 
-#include <llvm/IR/IRBuilder.h>
+#include <llvm/Transforms/InstCombine/InstCombine.h> // llvm::createInstructionCombiningPass
+#include <llvm/Transforms/IPO/AlwaysInliner.h> // llvm::createAlwaysInlinerLegacyPass
+#include <llvm/Transforms/Utils.h> // llvm::createPromoteMemoryToRegisterPass, llvm::createLoopSimplifyPass
+
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
@@ -35,8 +38,8 @@
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
 
-#include <cassert>
 #include <iostream>
+#include <memory> // std::unique_ptr
 
 inline std::shared_ptr<llvm::Module> generateModule(const std::shared_ptr<llvm::LLVMContext> &llvmContext,
                                                     const std::vector<std::shared_ptr<TopLevelAST>> &ast) {
@@ -49,7 +52,21 @@ inline std::shared_ptr<llvm::Module> generateModule(const std::shared_ptr<llvm::
   return emissionContext.module;
 }
 
+inline void addOptimizationPasses(llvm::legacy::PassManager &passManager) {
+  passManager.add(llvm::createAlwaysInlinerLegacyPass());
+
+  passManager.add(llvm::createPromoteMemoryToRegisterPass());
+  passManager.add(llvm::createLoopSimplifyPass());
+  passManager.add(llvm::createInstructionCombiningPass());
+}
+
 inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Module> &module) {
+  auto verifyFailed = llvm::verifyModule(*module, &llvm::errs());
+  if (verifyFailed) {
+    std::cerr << "Module verification failed" << std::endl;
+    std::exit(1);
+  }
+
   auto targetTriple = llvm::sys::getDefaultTargetTriple();
   module->setTargetTriple(targetTriple);
 
@@ -64,7 +81,7 @@ inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Mo
   auto features = "";
   llvm::TargetOptions opt;
   llvm::Optional<llvm::Reloc::Model> RM;
-  auto targetMachine = target->createTargetMachine(targetTriple, cpu, features, opt, RM);
+  std::unique_ptr<llvm::TargetMachine> targetMachine{target->createTargetMachine(targetTriple, cpu, features, opt, RM)};
 
   module->setDataLayout(targetMachine->createDataLayout());
 
@@ -76,14 +93,16 @@ inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Mo
     return 1;
   }
 
-  llvm::legacy::PassManager pass;
+  llvm::legacy::PassManager passManager;
 
-  if (targetMachine->addPassesToEmitFile(pass, dest, nullptr, llvm::CGFT_ObjectFile)) {
+  addOptimizationPasses(passManager);
+
+  if (targetMachine->addPassesToEmitFile(passManager, dest, nullptr, llvm::CGFT_ObjectFile)) {
     std::cout << "TheTargetMachine can't emit a file of this type" << std::endl;
     return 1;
   }
 
-  pass.run(*module);
+  passManager.run(*module);
   dest.flush();
 
   return 0;

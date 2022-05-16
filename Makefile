@@ -29,13 +29,13 @@ clean:
 
 ## LLVM-related Targets
 llvm: libs/llvm/build/Makefile
-	${MAKE} -C libs/llvm/build LLVMX86AsmParser LLVMX86CodeGen LLVMX86Disassembler
+	${MAKE} -C libs/llvm/build LLVMX86AsmParser LLVMX86CodeGen LLVMX86Disassembler LLVMipo
 
 .PHONY: llvm
 
 libs/llvm/build/Makefile: libs/llvm/llvm/CMakeLists.txt
 	@mkdir -p libs/llvm/build
-	cd libs/llvm/build && cmake ../llvm -DCMAKE_BUILD_TYPE=Release \
+	cd libs/llvm/build && cmake ../llvm -DCMAKE_BUILD_TYPE=Debug \
 		-DLLVM_TARGETS_TO_BUILD="X86" \
 		-DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_GO_TESTS=OFF \
 		-DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF

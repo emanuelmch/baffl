@@ -50,14 +50,14 @@ llvm::Value *LiteralStringAST::generate(EmissionContext &context) const {
   auto initializer = llvm::ConstantArray::get(stringType, values);
 
   const auto isConstant = true;
-  auto globalVariable = new llvm::GlobalVariable(*context.module, stringType, isConstant,
+  auto globalVariable = new llvm::GlobalVariable(*context.module, initializer->getType(), isConstant,
                                                  llvm::GlobalValue::PrivateLinkage, initializer, ".string.literal");
   globalVariable->setUnnamedAddr(llvm::GlobalVariable::UnnamedAddr::Global);
   globalVariable->setAlignment(llvm::MaybeAlign(1));
 
   llvm::Value *indexList[] = {llvm::ConstantInt::get(i64Type, 0), llvm::ConstantInt::get(i64Type, 0)};
   const auto inbounds = true;
-  return llvm::ConstantExpr::getGetElementPtr(stringType, globalVariable, indexList, inbounds);
+  return llvm::ConstantExpr::getGetElementPtr(initializer->getType(), globalVariable, indexList, inbounds);
 }
 
 llvm::Value *VariableDeclarationAST::generate(EmissionContext &context) const {
@@ -148,19 +148,23 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto functionName = this->name;
   auto function =
       llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, functionName, context.module.get());
+
+  //FIXME: Only add this attribute to functions that actually want it
+  if (functionName == "print") {
+    function->addAttribute(llvm::AttributeList::FunctionIndex, llvm::Attribute::AlwaysInline);
+  }
   context.addFunction(functionName, function);
 
-  auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
-  context.builder->SetInsertPoint(entryBlock);
 
   std::vector<VariableReference> arguments;
-
   if (realArguments.empty() == false) {
     arguments = realArguments;
   } else if (fakeArguments.empty() == false) {
     arguments = generateRealArguments(function, argumentTypes);
   }
 
+  auto entryBlock = llvm::BasicBlock::Create(*context.llvmContext, "entry", function);
+  context.builder->SetInsertPoint(entryBlock);
   for (const auto &argument : arguments) {
     auto alloca = context.builder->CreateAlloca(argument.type, nullptr, argument.name);
     context.builder->CreateStore(argument.value, alloca);
@@ -180,8 +184,6 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
       context.builder->CreateRetVoid();
     }
   }
-
-  context.runPasses(function);
 
   return function;
 }

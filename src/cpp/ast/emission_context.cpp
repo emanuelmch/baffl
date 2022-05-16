@@ -23,8 +23,6 @@
 #include "emission_context.h"
 
 #include <llvm/IR/Verifier.h>
-//#include <llvm/Transforms/InstCombine/InstCombine.h> // llvm::createInstructionCombiningPass
-#include <llvm/Transforms/Utils.h> // llvm::createPromoteMemoryToRegisterPass, llvm::createLoopSimplifyPass
 
 void Scope::addVariable(const VariableReference &alloca) {
   assert(variables.count(alloca.name) == 0);
@@ -47,20 +45,3 @@ const VariableReference &Scope::getVariable(const std::string &name) const {
 EmissionContext::EmissionContext(std::shared_ptr<llvm::LLVMContext> context)
     : llvmContext(std::move(context)), builder(std::make_shared<llvm::IRBuilder<>>(*llvmContext)),
       module(std::make_shared<llvm::Module>("baffl_main", *llvmContext)), types{llvmContext} {}
-
-void EmissionContext::runPasses(llvm::Function *function) {
-  auto verifyFailed = llvm::verifyFunction(*function, &llvm::errs());
-  if (verifyFailed) {
-    std::cerr << "Function verification failed" << std::endl;
-    std::exit(1);
-  }
-
-  llvm::legacy::FunctionPassManager passManager{module.get()};
-  passManager.doInitialization();
-
-  passManager.add(llvm::createPromoteMemoryToRegisterPass());
-  passManager.add(llvm::createLoopSimplifyPass());
-  // passManager.add(llvm::createInstructionCombiningPass());
-
-  passManager.run(*function);
-}

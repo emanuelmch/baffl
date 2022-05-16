@@ -34,7 +34,7 @@ find_package(LLVM REQUIRED CONFIG PATHS ./libs/llvm/build NO_DEFAULT_PATH)
 include_directories(${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
-llvm_map_components_to_libnames(llvm_libs X86)
+llvm_map_components_to_libnames(llvm_libs X86 ipo)
 
 # Compiler flags
 set(CMAKE_CXX_STANDARD 17)
@@ -71,6 +71,7 @@ set(unit_tests
         tests/cpp/code_parser_test.cpp
         )
 
+# TODO: Remove the LLVM dependency from these tests
 foreach (unit_test_file ${unit_tests})
     get_filename_component(unit_test_name ${unit_test_file} NAME_WE)
     add_executable(${unit_test_name} ${unit_test_file} $<TARGET_OBJECTS:baffl_lib>)
@@ -95,6 +96,7 @@ set(integration_tests
         tests/integration/maths_plus_minus.baffl
         tests/integration/maths_plus_plus.baffl
         tests/integration/print.baffl
+        tests/integration/print_multiple.baffl
         tests/integration/variable.baffl
         tests/integration/variable_mutable.baffl
         tests/integration/variable_scope.baffl

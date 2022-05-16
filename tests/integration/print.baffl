@@ -1,7 +1,5 @@
 import print;
 
 fun main() {
-    print("Hello");
-    print(" ");
-    print("World!");
+    print("Hello World!");
 }
