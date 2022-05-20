@@ -32,9 +32,10 @@ endif ()
 # Add LLVM Dependency
 find_package(LLVM REQUIRED CONFIG PATHS ./libs/llvm/build NO_DEFAULT_PATH)
 include_directories(${LLVM_INCLUDE_DIRS})
+#link_directories("${LLVM_LIBRARY_DIR}")
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
-llvm_map_components_to_libnames(llvm_libs X86 ipo)
+llvm_map_components_to_libnames(llvm_libs core instcombine ipo mc support transformutils X86)
 
 # Compiler flags
 set(CMAKE_CXX_STANDARD 17)
@@ -53,13 +54,14 @@ add_library(baffl_lib
         src/cpp/code_lexer.cpp
         src/cpp/code_parser.cpp
         )
+target_link_libraries(baffl_lib ${llvm_libs})
+# TODO: How can we control whether we want static linking for release?
 
 add_executable(baffl
         src/cpp/main.cpp
         src/cpp/helpers/file_reader.cpp
-        $<TARGET_OBJECTS:baffl_lib>
         )
-target_link_libraries(baffl ${llvm_libs})
+target_link_libraries(baffl baffl_lib)
 
 # Testing
 enable_testing()
@@ -74,8 +76,8 @@ set(unit_tests
 # TODO: Remove the LLVM dependency from these tests
 foreach (unit_test_file ${unit_tests})
     get_filename_component(unit_test_name ${unit_test_file} NAME_WE)
-    add_executable(${unit_test_name} ${unit_test_file} $<TARGET_OBJECTS:baffl_lib>)
-    target_link_libraries(${unit_test_name} gtest gtest_main pthread ${llvm_libs})
+    add_executable(${unit_test_name} ${unit_test_file})
+    target_link_libraries(${unit_test_name} baffl_lib gtest gtest_main pthread)
 
     add_test(${unit_test_name} ${unit_test_name})
 endforeach (unit_test_file)

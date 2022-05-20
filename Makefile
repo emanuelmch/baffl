@@ -36,6 +36,7 @@ llvm: libs/llvm/build/Makefile
 libs/llvm/build/Makefile: libs/llvm/llvm/CMakeLists.txt
 	@mkdir -p libs/llvm/build
 	cd libs/llvm/build && cmake ../llvm -DCMAKE_BUILD_TYPE=Debug \
+		-DBUILD_SHARED_LIBS=ON \
 		-DLLVM_TARGETS_TO_BUILD="X86" \
 		-DLLVM_INCLUDE_TESTS=OFF -DLLVM_INCLUDE_GO_TESTS=OFF \
 		-DLLVM_INCLUDE_BENCHMARKS=OFF -DLLVM_INCLUDE_DOCS=OFF
