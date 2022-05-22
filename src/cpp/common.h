@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Emanuel Machado da Silva
+ * Copyright (c) 2022 Emanuel Machado da Silva
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +22,9 @@
 
 #pragma once
 
-#include "ast.h"
+#include <cstdint>
 
-#include "common.h"
-
-#include <memory>
-#include <string>
-
-namespace CodeEmitter {
-
-OperationResult emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &, const std::string &outputFile, bool isVerbose);
-}
+enum OperationResult : uint_fast8_t {
+  SUCCESS = 0,
+  FAILURE = 1
+};

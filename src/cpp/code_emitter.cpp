@@ -60,11 +60,11 @@ inline void addOptimizationPasses(llvm::legacy::PassManager &passManager) {
   passManager.add(llvm::createInstructionCombiningPass());
 }
 
-inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Module> &module) {
+inline OperationResult writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Module> &module) {
   auto verifyFailed = llvm::verifyModule(*module, &llvm::errs());
   if (verifyFailed) {
     std::cerr << "Module verification failed" << std::endl;
-    std::exit(1);
+    return FAILURE;
   }
 
   auto targetTriple = llvm::sys::getDefaultTargetTriple();
@@ -74,7 +74,7 @@ inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Mo
   auto target = llvm::TargetRegistry::lookupTarget(targetTriple, error);
   if (!target) {
     std::cerr << error << std::endl;
-    return 1;
+    return FAILURE;
   }
 
   auto cpu = "generic";
@@ -90,25 +90,30 @@ inline int writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Mo
 
   if (errorCode) {
     std::cout << "Could not open file: " << errorCode.message();
-    return 1;
+    return FAILURE;
   }
 
-  llvm::legacy::PassManager passManager;
-
-  addOptimizationPasses(passManager);
-
-  if (targetMachine->addPassesToEmitFile(passManager, dest, nullptr, llvm::CGFT_ObjectFile)) {
-    std::cout << "TheTargetMachine can't emit a file of this type" << std::endl;
-    return 1;
+  {
+    llvm::legacy::PassManager optimizationPassManager;
+    addOptimizationPasses(optimizationPassManager);
+    optimizationPassManager.run(*module);
   }
 
-  passManager.run(*module);
+  {
+    llvm::legacy::PassManager objectEmissionPassManager;
+    if (targetMachine->addPassesToEmitFile(objectEmissionPassManager, dest, nullptr, llvm::CGFT_ObjectFile)) {
+      std::cout << "TheTargetMachine can't emit a file of this type" << std::endl;
+      return FAILURE;
+    }
+    objectEmissionPassManager.run(*module);
+  }
+
   dest.flush();
 
-  return 0;
+  return SUCCESS;
 }
 
-int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &topLevel,
+OperationResult CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &topLevel,
                                 const std::string &outputFile, bool isVerbose) {
   llvm::InitializeAllTargetInfos();
   llvm::InitializeAllTargets();
@@ -119,9 +124,11 @@ int CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> 
   auto context = std::make_shared<llvm::LLVMContext>();
   auto module = generateModule(context, topLevel);
 
-  if (isVerbose) {
+  auto result = writeModuleToFile(outputFile, module);
+
+  if (result == SUCCESS && isVerbose) {
     module->print(llvm::outs(), nullptr);
   }
 
-  return writeModuleToFile(outputFile, module);
+  return result;
 }
