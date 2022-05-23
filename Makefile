@@ -29,7 +29,7 @@ clean:
 
 ## LLVM-related Targets
 llvm: libs/llvm/build/Makefile
-	${MAKE} -C libs/llvm/build LLVMX86AsmParser LLVMX86CodeGen LLVMX86Disassembler LLVMipo
+	${MAKE} -C libs/llvm/build LLVMX86AsmParser LLVMX86CodeGen LLVMX86Disassembler LLVMAnalysis LLVMipo LLVMPasses
 
 .PHONY: llvm
 

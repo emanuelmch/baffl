@@ -22,14 +22,11 @@
 
 #include "code_emitter.h"
 
-#include <llvm/Transforms/InstCombine/InstCombine.h> // llvm::createInstructionCombiningPass
-#include <llvm/Transforms/IPO/AlwaysInliner.h> // llvm::createAlwaysInlinerLegacyPass
-#include <llvm/Transforms/Utils.h> // llvm::createPromoteMemoryToRegisterPass, llvm::createLoopSimplifyPass
-
 #include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/PassManager.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/Passes/PassBuilder.h> // llvm::PassBuilder::OptimizationLevel
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/TargetRegistry.h>
@@ -52,12 +49,24 @@ inline std::shared_ptr<llvm::Module> generateModule(const std::shared_ptr<llvm::
   return emissionContext.module;
 }
 
-inline void addOptimizationPasses(llvm::legacy::PassManager &passManager) {
-  passManager.add(llvm::createAlwaysInlinerLegacyPass());
+inline void runOptimizationPasses(std::shared_ptr<llvm::Module> &module,
+                                  std::unique_ptr<llvm::TargetMachine> &targetMachine) {
+  llvm::LoopAnalysisManager loopAnalysisManager;
+  llvm::FunctionAnalysisManager functionAnalysisManager;
+  llvm::CGSCCAnalysisManager cgsccAnalysisManager;
+  llvm::ModuleAnalysisManager moduleAnalysisManager;
 
-  passManager.add(llvm::createPromoteMemoryToRegisterPass());
-  passManager.add(llvm::createLoopSimplifyPass());
-  passManager.add(llvm::createInstructionCombiningPass());
+  llvm::PassBuilder passBuilder{targetMachine.get()};
+  passBuilder.registerModuleAnalyses(moduleAnalysisManager);
+  passBuilder.registerCGSCCAnalyses(cgsccAnalysisManager);
+  passBuilder.registerFunctionAnalyses(functionAnalysisManager);
+  passBuilder.registerLoopAnalyses(loopAnalysisManager);
+  passBuilder.crossRegisterProxies(loopAnalysisManager, functionAnalysisManager, cgsccAnalysisManager,
+                                   moduleAnalysisManager);
+
+  passBuilder                                                                  //
+      .buildPerModuleDefaultPipeline(llvm::PassBuilder::OptimizationLevel::O2) //
+      .run(*module, moduleAnalysisManager);                                    //
 }
 
 inline OperationResult writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Module> &module) {
@@ -93,11 +102,7 @@ inline OperationResult writeModuleToFile(const std::string &output, std::shared_
     return FAILURE;
   }
 
-  {
-    llvm::legacy::PassManager optimizationPassManager;
-    addOptimizationPasses(optimizationPassManager);
-    optimizationPassManager.run(*module);
-  }
+  runOptimizationPasses(module, targetMachine);
 
   {
     llvm::legacy::PassManager objectEmissionPassManager;
@@ -114,7 +119,7 @@ inline OperationResult writeModuleToFile(const std::string &output, std::shared_
 }
 
 OperationResult CodeEmitter::emitObjectFile(const std::vector<std::shared_ptr<TopLevelAST>> &topLevel,
-                                const std::string &outputFile, bool isVerbose) {
+                                            const std::string &outputFile, bool isVerbose) {
   llvm::InitializeAllTargetInfos();
   llvm::InitializeAllTargets();
   llvm::InitializeAllTargetMCs();

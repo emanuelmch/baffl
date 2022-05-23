@@ -146,11 +146,15 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
 
   auto functionType = llvm::FunctionType::get(returnType, argumentTypes, false);
   auto functionName = this->name;
-  auto function =
-      llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, functionName, context.module.get());
+
+  llvm::Function *function;
 
   if (this->attributes.find(FunctionAttribute::Inline) != attributes.end()) {
+    function = llvm::Function::Create(functionType, llvm::Function::PrivateLinkage, functionName, context.module.get());
     function->addAttribute(llvm::AttributeList::FunctionIndex, llvm::Attribute::AlwaysInline);
+  } else { // Not inline
+    function =
+        llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, functionName, context.module.get());
   }
   context.addFunction(functionName, function);
 

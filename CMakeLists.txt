@@ -35,7 +35,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 #link_directories("${LLVM_LIBRARY_DIR}")
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
-llvm_map_components_to_libnames(llvm_libs core instcombine ipo mc support transformutils X86)
+llvm_map_components_to_libnames(llvm_libs analysis core instcombine ipo mc passes support transformutils X86)
 
 # Compiler flags
 set(CMAKE_CXX_STANDARD 17)
