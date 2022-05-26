@@ -29,11 +29,6 @@ Bill's Awesome For Funsies Language
 * Clean up the type usage (Move stuff into `TypeManager`)
 
 ## Things to do before 0.2
-* Use our own LLVM instead of the system's (so we can control the LLVM version)
-* Automated testing
-
-## Things to do before 0.3
-* Inline functions!
 * Make function lookup mindful of the argument types, not just the function name
 * Treat basic operations (e.g. i32 + i32) as regular (inline) functions internally
 
