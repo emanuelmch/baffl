@@ -33,6 +33,7 @@ struct ExpressionBuilder {
   // By implementing binary operators like this, we ensure we get the left-first precedence on multiple operations
   std::shared_ptr<ExpressionBuilder> plus(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> minus(const std::shared_ptr<ExpressionBuilder> &);
+  std::shared_ptr<ExpressionBuilder> modulo(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> equals(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> lessThan(const std::shared_ptr<ExpressionBuilder> &);
   std::shared_ptr<ExpressionBuilder> lessThanOrEqualTo(const std::shared_ptr<ExpressionBuilder> &);
@@ -63,6 +64,8 @@ struct BinaryOperatorExpressionBuilder : ExpressionBuilder {
       return std::make_shared<PlusOperationAST>(left, right);
     case operator_minus:
       return std::make_shared<MinusOperationAST>(left, right);
+    case operator_modulo:
+      return std::make_shared<ModuloOperationAST>(left, right);
     case operator_equals:
       return std::make_shared<EqualsOperationAST>(left, right);
     case operator_less_than:
@@ -88,6 +91,11 @@ inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::minus(const std::sh
   return std::make_shared<BinaryOperatorExpressionBuilder>(operator_minus, first, second);
 }
 
+inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::modulo(const std::shared_ptr<ExpressionBuilder> &right) {
+  const std::shared_ptr<ExpressionBuilder> first = to_shared();
+  const std::shared_ptr<ExpressionBuilder> &second = right;
+  return std::make_shared<BinaryOperatorExpressionBuilder>(operator_modulo, first, second);
+}
 inline std::shared_ptr<ExpressionBuilder> ExpressionBuilder::equals(const std::shared_ptr<ExpressionBuilder> &right) {
   auto first = to_shared();
   auto &second = right;

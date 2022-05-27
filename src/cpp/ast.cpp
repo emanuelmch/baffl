@@ -315,6 +315,13 @@ llvm::Value *MinusOperationAST::generate(EmissionContext &context) const {
   return context.builder->CreateSub(leftValue, rightValue);
 }
 
+llvm::Value *ModuloOperationAST::generate(EmissionContext &context) const {
+  auto leftValue = this->left->generate(context);
+  auto rightValue = this->right->generate(context);
+  // FIXME: Don't blindly use SReam, we have URem and FRem to worry about too
+  return context.builder->CreateSRem(leftValue, rightValue);
+}
+
 llvm::Value *EqualsOperationAST::generate(EmissionContext &context) const {
   auto leftValue = this->left->generate(context);
   auto rightValue = this->right->generate(context);

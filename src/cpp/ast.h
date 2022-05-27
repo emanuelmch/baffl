@@ -312,6 +312,21 @@ struct MinusOperationAST : public ExpressionAST {
   }
 };
 
+struct ModuloOperationAST : public ExpressionAST {
+  const std::shared_ptr<const ExpressionAST> left;
+  const std::shared_ptr<const ExpressionAST> right;
+
+  ModuloOperationAST(std::shared_ptr<const ExpressionAST> left, std::shared_ptr<const ExpressionAST> right)
+      : left(std::move(left)), right(std::move(right)) {}
+
+  llvm::Value *generate(EmissionContext &) const override;
+
+  inline bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const ModuloOperationAST *>(&o);
+    return other && *(this->left) == *(other->left) && *(this->right) == *(other->right);
+  }
+};
+
 struct EqualsOperationAST : public ExpressionAST {
   const std::shared_ptr<const ExpressionAST> left;
   const std::shared_ptr<const ExpressionAST> right;

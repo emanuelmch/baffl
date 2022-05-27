@@ -85,6 +85,10 @@ inline static std::shared_ptr<ExpressionAST> readExpression(std::queue<Token> *t
       tokens->pop();
       auto right = readPrimary(tokens);
       expression = std::make_shared<MinusOperationAST>(expression, right);
+    } else if (next == operator_modulo) {
+      tokens->pop();
+      auto right = readPrimary(tokens);
+      expression = std::make_shared<ModuloOperationAST>(expression, right);
     } else if (next == operator_equals) {
       tokens->pop();
       auto right = readPrimary(tokens);

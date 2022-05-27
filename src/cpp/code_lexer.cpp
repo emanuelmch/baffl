@@ -60,6 +60,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
   case operator_minus:
     os << "`-`";
     break;
+  case operator_modulo:
+    os << "`%`";
+    break;
   case operator_equals:
     os << "`==`";
     break;
@@ -231,6 +234,9 @@ inline Token getNext(const std::string_view &content, size_t *pos) {
   case '-':
     ++(*pos);
     return Token(operator_minus);
+  case '%':
+    ++(*pos);
+    return Token(operator_modulo);
   case '"':
     return readStringToken(content, pos);
   default:
