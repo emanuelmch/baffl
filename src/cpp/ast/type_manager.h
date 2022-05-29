@@ -33,13 +33,26 @@ struct TypeManager {
 public:
   explicit TypeManager(std::shared_ptr<llvm::LLVMContext> llvmContext) : llvmContext(std::move(llvmContext)) {}
 
-  // TODO: Return a Type of our own instead of LLVM's
   inline llvm::IntegerType *boolean() { return llvm::Type::getInt1Ty(*llvmContext); }
   inline llvm::IntegerType *i32() { return llvm::Type::getInt32Ty(*llvmContext); }
   inline llvm::IntegerType *i64() { return llvm::Type::getInt64Ty(*llvmContext); }
   inline llvm::IntegerType *character() { return llvm::Type::getInt8Ty(*llvmContext); }
   inline llvm::PointerType *string() { return llvm::PointerType::get(character(), 0); }
   inline llvm::ArrayType *string(uint64_t size) { return llvm::ArrayType::get(character(), size); }
+  inline llvm::Type *voidType() { return llvm::Type::getVoidTy(*llvmContext); }
+
+  inline llvm::Type *fromName(const std::string& name) {
+    if (name == "i32") {
+      return i32();
+    } else if (name == "bool") {
+      return boolean();
+    } else if (name == "temporaryStringPointer") {
+      return string();
+    } else {
+      assert(name == "void");
+      return voidType();
+    }
+  }
 
 private:
   std::shared_ptr<llvm::LLVMContext> llvmContext;

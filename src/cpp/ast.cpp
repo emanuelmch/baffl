@@ -116,15 +116,11 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   }
 
   llvm::Type *returnType;
-  if (this->name == "main" || this->returnTypeName == "i32") {
+  if (this->name == "main") {
+    assert(this->returnTypeName == "void" || this->returnTypeName == "i32");
     returnType = context.types.i32();
-  } else if (this->returnTypeName == "bool") {
-    returnType = context.types.boolean();
-  } else if (this->returnTypeName == "temporaryStringPointer") {
-    returnType = context.types.string();
   } else {
-    assert(this->returnTypeName == "void");
-    returnType = llvm::Type::getVoidTy(*context.llvmContext);
+    returnType = context.types.fromName(this->returnTypeName);
   }
 
   std::vector<llvm::Type *> argumentTypes;
