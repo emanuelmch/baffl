@@ -25,7 +25,46 @@
 #include <llvm/IR/InlineAsm.h>
 #include <llvm/IR/Instructions.h>
 
-llvm::Value *generatePrintSyscall(EmissionContext &context, llvm::Value *text, llvm::Value *length) {
+struct ExtractCharFromStringAST : ExpressionAST {
+
+  ~ExtractCharFromStringAST() override = default;
+
+  llvm::Value *generate(EmissionContext &context) const override {
+    const auto stringType = context.types.string();
+
+    auto indexReference = VariableReferenceAST{"i"}.generate(context);
+    auto textReference = VariableReferenceAST{"text"}.generate(context);
+
+    llvm::Value *indexList[] = {indexReference};
+    auto gep = context.builder->CreateGEP(stringType->getPointerElementType(), textReference, indexList);
+    return VariableReferenceAST{gep, "currentChar"}.generate(context);
+  }
+
+  bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const ExtractCharFromStringAST *>(&o);
+    return other != nullptr;
+  }
+};
+
+struct PrintConditionIntrinsicAST : public ExpressionAST {
+
+  ~PrintConditionIntrinsicAST() override = default;
+
+  llvm::Value *generate(EmissionContext &context) const override {
+    auto currentChar = std::make_shared<ExtractCharFromStringAST>();
+    auto isZero = std::make_shared<EqualsOperationAST>(currentChar, std::make_shared<LiteralIntegerAST>(0, 8));
+    auto isNotZero = std::make_shared<EqualsOperationAST>(isZero, std::make_shared<LiteralBooleanAST>(false));
+
+    return isNotZero->generate(context);
+  }
+
+  bool operator==(const AST &o) const override {
+    auto other = dynamic_cast<const PrintConditionIntrinsicAST *>(&o);
+    return other != nullptr;
+  }
+};
+
+inline llvm::Value *generatePrintSyscall(EmissionContext &context, llvm::Value *text, llvm::Value *length) {
   const auto stringType = context.types.string();
   const auto i32Type = context.types.i32();
 
@@ -73,35 +112,6 @@ void PrintFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
   auto textReference = VariableReferenceAST{"text"}.generate(context);
   auto lengthReference = VariableReferenceAST{"i"}.generate(context);
   generatePrintSyscall(context, textReference, lengthReference);
-}
-
-struct ExtractCharFromStringAST : ExpressionAST {
-
-  ~ExtractCharFromStringAST() override = default;
-
-  llvm::Value *generate(EmissionContext &context) const override {
-    const auto stringType = context.types.string();
-
-    auto indexReference = VariableReferenceAST{"i"}.generate(context);
-    auto textReference = VariableReferenceAST{"text"}.generate(context);
-
-    llvm::Value *indexList[] = {indexReference};
-    auto gep = context.builder->CreateGEP(stringType->getPointerElementType(), textReference, indexList);
-    return VariableReferenceAST{gep, "currentChar"}.generate(context);
-  }
-
-  bool operator==(const AST &o) const override {
-    auto other = dynamic_cast<const ExtractCharFromStringAST *>(&o);
-    return other != nullptr;
-  }
-};
-
-llvm::Value *PrintConditionIntrinsicAST::generate(EmissionContext &context) const {
-  auto currentChar = std::make_shared<ExtractCharFromStringAST>();
-  auto isZero = std::make_shared<EqualsOperationAST>(currentChar, std::make_shared<LiteralIntegerAST>(0, 8));
-  auto isNotZero = std::make_shared<EqualsOperationAST>(isZero, std::make_shared<LiteralBooleanAST>(false));
-
-  return isNotZero->generate(context);
 }
 
 ToStringFunctionIntrinsicAST::ToStringFunctionIntrinsicAST()

@@ -102,16 +102,14 @@ inline OperationResult writeModuleToFile(const std::string &output, std::shared_
     return FAILURE;
   }
 
-  runOptimizationPasses(module, targetMachine);
+    runOptimizationPasses(module, targetMachine);
 
-  {
-    llvm::legacy::PassManager objectEmissionPassManager;
-    if (targetMachine->addPassesToEmitFile(objectEmissionPassManager, dest, nullptr, llvm::CGFT_ObjectFile)) {
-      std::cout << "TheTargetMachine can't emit a file of this type" << std::endl;
-      return FAILURE;
-    }
-    objectEmissionPassManager.run(*module);
+  llvm::legacy::PassManager objectEmissionPassManager;
+  if (targetMachine->addPassesToEmitFile(objectEmissionPassManager, dest, nullptr, llvm::CGFT_ObjectFile)) {
+    std::cout << "TheTargetMachine can't emit a file of this type" << std::endl;
+    return FAILURE;
   }
+  objectEmissionPassManager.run(*module);
 
   dest.flush();
 
