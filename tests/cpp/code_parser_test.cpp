@@ -370,6 +370,35 @@ TEST(CodeParser, BinaryOperator_Minus) {
   EXPECT_EQ(actual[0], expected);
 }
 
+TEST(CodeParser, BinaryOperator_Division) {
+  // fun main(): i32 { return 9 / 3; }
+
+  std::queue<Token> input;
+  input.emplace(keyword_function);
+  input.emplace(name, "main");
+  input.emplace(bracket_open);
+  input.emplace(bracket_close);
+  input.emplace(colon);
+  input.emplace(name, "i32");
+  input.emplace(curly_open);
+  input.emplace(keyword_return);
+  input.emplace(literal_integer, "9");
+  input.emplace(operator_division);
+  input.emplace(literal_integer, "3");
+  input.emplace(semicolon);
+  input.emplace(curly_close);
+
+  auto expected = ASTBuilder::function("main", "i32") //
+                      .returnExpression([]() {        //
+                        return intLiteral(9)->division(intLiteral(3));
+                      });
+
+  auto actual = CodeParser::parseTopLevelExpressions(input);
+
+  ASSERT_EQ(actual.size(), 1);
+  EXPECT_EQ(actual[0], expected);
+}
+
 TEST(CodeParser, BinaryOperator_Modulo) {
   // fun main(): i32 { return 1 % 2; }
 

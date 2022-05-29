@@ -316,6 +316,13 @@ llvm::Value *MinusOperationAST::generate(EmissionContext &context) const {
   return context.builder->CreateSub(leftValue, rightValue);
 }
 
+llvm::Value *DivisionOperationAST::generate(EmissionContext &context) const {
+  auto leftValue = this->left->generate(context);
+  auto rightValue = this->right->generate(context);
+  // FIXME: Don't blindly use SDiv, we have other divisions to worry about too
+  return context.builder->CreateSDiv(leftValue, rightValue);
+}
+
 llvm::Value *ModuloOperationAST::generate(EmissionContext &context) const {
   auto leftValue = this->left->generate(context);
   auto rightValue = this->right->generate(context);

@@ -41,6 +41,7 @@ enum TokenType : uint8_t {
   operator_assign,                // =
   operator_plus,                  // +
   operator_minus,                 // -
+  operator_division,              // /
   operator_modulo,                // %
   operator_equals,                // ==
   operator_less_than,             // <

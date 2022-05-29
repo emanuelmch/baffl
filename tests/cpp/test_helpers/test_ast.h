@@ -91,6 +91,22 @@ void PrintTo(const MinusOperationAST &minusAST, std::ostream *os) {
   *os << " }";
 }
 
+void PrintTo(const DivisionOperationAST &divisionAST, std::ostream *os) {
+  *os << "BinaryOperation: / { ";
+  PrintTo(*divisionAST.left, os);
+  *os << ", ";
+  PrintTo(*divisionAST.right, os);
+  *os << " }";
+}
+
+void PrintTo(const ModuloOperationAST &moduloAST, std::ostream *os) {
+  *os << "BinaryOperation: / { ";
+  PrintTo(*moduloAST.left, os);
+  *os << ", ";
+  PrintTo(*moduloAST.right, os);
+  *os << " }";
+}
+
 void PrintTo(const EqualsOperationAST &equalsAST, std::ostream *os) {
   *os << "BinaryOperation: == { ";
   PrintTo(*equalsAST.left, os);
@@ -127,6 +143,8 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
   auto returnAST = dynamic_cast<const ReturnAST *>(&expressionAST);
   auto plusOperationAST = dynamic_cast<const PlusOperationAST *>(&expressionAST);
   auto minusOperationAST = dynamic_cast<const MinusOperationAST *>(&expressionAST);
+  auto divisionOperationAST = dynamic_cast<const DivisionOperationAST*>(&expressionAST);
+  auto moduloOperationAST = dynamic_cast<const ModuloOperationAST*>(&expressionAST);
   auto equalsOperationAST = dynamic_cast<const EqualsOperationAST *>(&expressionAST);
   auto lessThanOperationAST = dynamic_cast<const LessThanOperationAST *>(&expressionAST);
   auto lessThanOrEqualToOperationAST = dynamic_cast<const LessThanOrEqualToOperationAST *>(&expressionAST);
@@ -151,6 +169,10 @@ void PrintTo(const ExpressionAST &expressionAST, std::ostream *os) {
     PrintTo(*plusOperationAST, os);
   } else if (minusOperationAST) {
     PrintTo(*minusOperationAST, os);
+  } else if (divisionOperationAST) {
+    PrintTo(*divisionOperationAST, os);
+  } else if (moduloOperationAST) {
+    PrintTo(*moduloOperationAST, os);
   } else if (equalsOperationAST) {
     PrintTo(*equalsOperationAST, os);
   } else if (lessThanOperationAST) {
