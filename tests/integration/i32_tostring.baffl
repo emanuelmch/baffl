@@ -1,0 +1,6 @@
+import print;
+import toString;
+
+fun main() {
+    print(toString(123456));
+}

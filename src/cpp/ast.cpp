@@ -110,9 +110,6 @@ llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   auto scopeGuard = context.pushScope();
 
-  const auto boolType = llvm::Type::getInt1Ty(*context.llvmContext);
-  const auto i32Type = llvm::Type::getInt32Ty(*context.llvmContext);
-
   // TODO: Move the void main magic elsewhere? Maybe?
   if (this->name == "main") {
     assert(this->returnTypeName == "void" || this->returnTypeName == "i32");
@@ -120,9 +117,11 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
 
   llvm::Type *returnType;
   if (this->name == "main" || this->returnTypeName == "i32") {
-    returnType = i32Type;
+    returnType = context.types.i32();
   } else if (this->returnTypeName == "bool") {
-    returnType = boolType;
+    returnType = context.types.boolean();
+  } else if (this->returnTypeName == "temporaryStringPointer") {
+    returnType = context.types.string();
   } else {
     assert(this->returnTypeName == "void");
     returnType = llvm::Type::getVoidTy(*context.llvmContext);
@@ -132,15 +131,15 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
   for (auto argument : fakeArguments) {
     auto argumentType = std::get<1>(argument);
     if (argumentType == "i32") {
-      argumentTypes.emplace_back(i32Type);
+      argumentTypes.emplace_back(context.types.i32());
     } else if (argumentType == "temporaryStringPointer") {
-      // FIXME: DELETE THIS temporaryStringPointer thing, it's used in PrintFunctionIntrinsicAST
+      // FIXME: DELETE THIS temporaryStringPointer thing, it's used in the intrinsic functions
       const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
       const auto stringPointerType = llvm::PointerType::get(charType, 0);
       argumentTypes.emplace_back(stringPointerType);
     } else {
       assert(argumentType == "bool");
-      argumentTypes.emplace_back(boolType);
+      argumentTypes.emplace_back(context.types.boolean());
     }
   }
 
@@ -239,8 +238,14 @@ llvm::Value *FunctionCallAST::generate(EmissionContext &context) const {
 }
 
 llvm::Value *ImportAST::generate(EmissionContext &context) const {
-  assert(this->name == "print");
-  return PrintFunctionIntrinsicAST(context).generate(context);
+  if (this->name == "print") {
+    return PrintFunctionIntrinsicAST(context).generate(context);
+  } else if (this->name == "toString") {
+    return ToStringFunctionIntrinsicAST().generate(context);
+  } else {
+    assert(false && "Unknown import name");
+    return nullptr;
+  }
 }
 
 llvm::Value *IfAST::generate(EmissionContext &context) const {

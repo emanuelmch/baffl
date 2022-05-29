@@ -44,3 +44,12 @@ struct PrintConditionIntrinsicAST : public ExpressionAST {
     return other != nullptr;
   }
 };
+
+// FIXME: This should be part of the stdlib, not a compiler intrinsic
+struct ToStringFunctionIntrinsicAST : public FunctionAST {
+
+  explicit ToStringFunctionIntrinsicAST();
+  ~ToStringFunctionIntrinsicAST() override = default;
+
+  void generateBody(EmissionContext &) const override;
+};

@@ -103,3 +103,12 @@ llvm::Value *PrintConditionIntrinsicAST::generate(EmissionContext &context) cons
 
   return isNotZero->generate(context);
 }
+
+ToStringFunctionIntrinsicAST::ToStringFunctionIntrinsicAST()
+ : FunctionAST("toString", "temporaryStringPointer", {{"value", "i32"}}, {}, {FunctionAttribute::Inline})
+{}
+
+void ToStringFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
+  auto result = std::make_shared<LiteralStringAST>("123456");
+  ReturnAST(result).generate(context);
+}

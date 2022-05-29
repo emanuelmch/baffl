@@ -34,6 +34,7 @@ public:
   explicit TypeManager(std::shared_ptr<llvm::LLVMContext> llvmContext) : llvmContext(std::move(llvmContext)) {}
 
   // TODO: Return a Type of our own instead of LLVM's
+  inline llvm::IntegerType *boolean() { return llvm::Type::getInt1Ty(*llvmContext); }
   inline llvm::IntegerType *i32() { return llvm::Type::getInt32Ty(*llvmContext); }
   inline llvm::IntegerType *i64() { return llvm::Type::getInt64Ty(*llvmContext); }
   inline llvm::IntegerType *character() { return llvm::Type::getInt8Ty(*llvmContext); }
