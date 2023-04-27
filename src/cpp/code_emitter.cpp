@@ -64,9 +64,8 @@ inline void runOptimizationPasses(std::shared_ptr<llvm::Module> &module,
   passBuilder.crossRegisterProxies(loopAnalysisManager, functionAnalysisManager, cgsccAnalysisManager,
                                    moduleAnalysisManager);
 
-  passBuilder                                                                  //
-      .buildPerModuleDefaultPipeline(llvm::PassBuilder::OptimizationLevel::O2) //
-      .run(*module, moduleAnalysisManager);                                    //
+  passBuilder.buildPerModuleDefaultPipeline(llvm::PassBuilder::OptimizationLevel::O2)
+      .run(*module, moduleAnalysisManager);
 }
 
 inline OperationResult writeModuleToFile(const std::string &output, std::shared_ptr<llvm::Module> &module) {
@@ -102,7 +101,7 @@ inline OperationResult writeModuleToFile(const std::string &output, std::shared_
     return FAILURE;
   }
 
-    runOptimizationPasses(module, targetMachine);
+  runOptimizationPasses(module, targetMachine);
 
   llvm::legacy::PassManager objectEmissionPassManager;
   if (targetMachine->addPassesToEmitFile(objectEmissionPassManager, dest, nullptr, llvm::CGFT_ObjectFile)) {

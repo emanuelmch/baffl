@@ -25,6 +25,8 @@
 #include <llvm/IR/InlineAsm.h>
 #include <llvm/IR/Instructions.h>
 
+#include "./gambiarra.cpp"
+
 struct ExtractCharFromStringAST : ExpressionAST {
 
   ~ExtractCharFromStringAST() override = default;
@@ -82,21 +84,23 @@ inline llvm::Value *generatePrintSyscall(EmissionContext &context, llvm::Value *
 
   const auto WRITE = llvm::ConstantInt::get(i32Type, 1);
   const auto STDOUT = llvm::ConstantInt::get(i32Type, 1);
-  std::vector<llvm::Value *> argumentValues = {WRITE, STDOUT, text, length};
+  const std::vector<llvm::Value *> argumentValues = {WRITE, STDOUT, text, length};
 
   auto result = context.builder->CreateCall(assemblyCall, argumentValues);
   result->addAttribute(llvm::AttributeList::FunctionIndex, llvm::Attribute::NoUnwind);
 
   return result;
 }
-
 std::vector<std::tuple<std::string, std::string>> createPrintArguments(EmissionContext &) {
   // FIXME: DELETE THIS temporaryStringPointer thing
   return {{"text", "temporaryStringPointer"}};
 }
 
 PrintFunctionIntrinsicAST::PrintFunctionIntrinsicAST(EmissionContext &context)
-    : FunctionAST("print", "void", createPrintArguments(context), {}, {FunctionAttribute::Inline}) {}
+    : FunctionAST("print", "i32", createPrintArguments(context), {},
+                  {
+                      // FunctionAttribute::Inline
+                  }) {}
 
 void PrintFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
   auto zero = std::make_shared<LiteralIntegerAST>(0);
@@ -111,14 +115,78 @@ void PrintFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
 
   auto textReference = VariableReferenceAST{"text"}.generate(context);
   auto lengthReference = VariableReferenceAST{"i"}.generate(context);
-  generatePrintSyscall(context, textReference, lengthReference);
+  auto returnValue = generatePrintSyscall(context, textReference, lengthReference);
+
+  context.builder->CreateRet(returnValue);
 }
 
 ToStringFunctionIntrinsicAST::ToStringFunctionIntrinsicAST()
- : FunctionAST("toString", "temporaryStringPointer", {{"value", "i32"}}, {}, {FunctionAttribute::Inline})
-{}
+    : FunctionAST("toString", "temporaryStringPointer", {{"value", "i32"}}, {},
+                  {
+                      // FunctionAttribute::Inline
+                  }) {}
 
+inline llvm::Value *generateMmapSyscall(EmissionContext &context, uint64_t length) {
+  const auto i32Type = context.types.i32();
+  // FIXME: Should be a opaque pointer instead
+  const auto stringType = context.types.string();
+
+  std::vector<llvm::Type *> syscallArgumentTypes;
+  syscallArgumentTypes.push_back(i32Type);
+  syscallArgumentTypes.push_back(i32Type);
+  syscallArgumentTypes.push_back(i32Type);
+  syscallArgumentTypes.push_back(i32Type);
+  syscallArgumentTypes.push_back(i32Type);
+  syscallArgumentTypes.push_back(i32Type);
+  syscallArgumentTypes.push_back(i32Type);
+
+  const auto syscallFunctionType = llvm::FunctionType::get(stringType, syscallArgumentTypes, false);
+  const auto asmString = "syscall";
+  const auto constraintz = "={ax},0,{di},{si},{dx},~{rcx},~{r11},~{memory},~{dirflag},~{fpsr},~{flags}";
+  const auto constraints = "={ax},0,{di},{si},{dx},{r10},{r8},{r9},~{rcx},~{r11},~{memory},~{dirflag},~{fpsr},~{flags}";
+  const auto hasSideEffects = true;
+
+  //  const auto x = myVerify(syscallFunctionType, constraints);
+  //  std::cerr << "success?? " << (x ? "TRUE" : "FALSE") << std::endl<< std::endl;
+
+  llvm::InlineAsm *assemblyCall = llvm::InlineAsm::get(syscallFunctionType, asmString, constraints, hasSideEffects);
+
+  const auto MMAP = llvm::ConstantInt::get(i32Type, 9);
+  const auto addr = llvm::ConstantInt::get(i32Type, 0);
+  const auto fd = llvm::ConstantInt::getSigned(i32Type, -1);
+  const auto off = llvm::ConstantInt::get(i32Type, 0);
+
+  const auto len = llvm::ConstantInt::get(i32Type, length);
+
+  const auto PROT_READ = 0x1;
+  const auto PROT_WRITE = 0x2;
+  const auto prot = llvm::ConstantInt::get(i32Type, PROT_READ | PROT_WRITE);
+
+  // TODO: We might want to use MAP_SHARED instead of MAP_ANONYMOUS in the future
+  // const auto MAP_SHARED = 0x01;
+  const auto MAP_PRIVATE = 0x02;
+  const auto MAP_ANONYMOUS = 0x20;
+  const auto flags = llvm::ConstantInt::get(i32Type, MAP_PRIVATE | MAP_ANONYMOUS);
+
+  const std::vector<llvm::Value *> argumentValues = {MMAP, addr, len, prot, flags, fd, off};
+
+  auto result = context.builder->CreateCall(assemblyCall, argumentValues);
+  result->addAttribute(llvm::AttributeList::FunctionIndex, llvm::Attribute::NoUnwind);
+
+  return result;
+}
+
+// FIXME: Now do it without memcpy! And actually use the value received...
 void ToStringFunctionIntrinsicAST::generateBody(EmissionContext &context) const {
-  auto result = std::make_shared<LiteralStringAST>("123456");
-  ReturnAST(result).generate(context);
+  // TODO: What about munmap?
+  const auto charType = context.types.character();
+  // auto value = VariableReferenceAST{"value"}.generate(context);
+
+  auto newString = generateMmapSyscall(context, 11);
+
+  auto result = std::make_shared<LiteralStringAST>("123456")->generate(context);
+
+  const auto defaultAlign = llvm::MaybeAlign();
+  context.builder->CreateMemCpy(newString, defaultAlign, result, defaultAlign, 11);
+  context.builder->CreateRet(newString);
 }

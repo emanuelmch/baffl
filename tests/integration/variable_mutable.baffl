@@ -1,5 +1,6 @@
 fun main(): i32 {
     var x = 11;
-    x = x + 21;
+    var y = x + 10;
+    x = x + y;
     return x;
 }

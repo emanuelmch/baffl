@@ -102,9 +102,16 @@ llvm::Value *VariableReferenceAST::generate(EmissionContext &context) const {
   } else {
     reference = context.getVariable(this->varName).value;
   }
-  auto variableType = reference->getType()->getPointerElementType();
 
-  return context.builder->CreateLoad(variableType, reference, loadName);
+  // TODO: Rewrite this when we proper use opaque pointers
+  auto refType = reference->getType();
+  if (refType->isOpaquePointerTy()) {
+    auto variableType = context.types.string();
+    return context.builder->CreateLoad(variableType, reference, loadName);
+  } else {
+    auto variableType = refType->getPointerElementType();
+    return context.builder->CreateLoad(variableType, reference, loadName);
+  }
 }
 
 llvm::Value *FunctionAST::generate(EmissionContext &context) const {
@@ -133,6 +140,9 @@ llvm::Value *FunctionAST::generate(EmissionContext &context) const {
       const auto charType = llvm::IntegerType::getInt8Ty(*context.llvmContext);
       const auto stringPointerType = llvm::PointerType::get(charType, 0);
       argumentTypes.emplace_back(stringPointerType);
+    } else if (argumentType == "rawPointer") {
+      const auto opaquePointerType = context.types.opaquePointer();
+      argumentTypes.emplace_back(opaquePointerType);
     } else {
       assert(argumentType == "bool");
       argumentTypes.emplace_back(context.types.boolean());
@@ -336,6 +346,9 @@ llvm::Value *EqualsOperationAST::generate(EmissionContext &context) const {
   if (leftValue->getType() != rightValue->getType()) {
     auto typeA = leftValue->getType()->getTypeID();
     auto typeB = rightValue->getType()->getTypeID();
+    if (typeA != typeB) {
+      std::cerr << "A: " << typeA << "\nB: " << typeB << std::endl;
+    }
     assert(typeA == typeB);
     return context.builder->CreateICmpEQ(leftValue, rightValue);
   }
